@@ -1,5 +1,3 @@
-# ProjectManagementAppDoc
-
 # Project Management System 
 
 Project Management System is a tool that helps working with multiple project management methodologies. 
@@ -96,7 +94,14 @@ time deleted_at
 
 ### Project Roadmap
 
-Project Roadmap will created by gantt diagram page. First sprints will be defined. Than subjects will be created and users organization accounts will add inside of the subject. sprints will be created Than inside the sprints, issues starts to creating. 
+Project Roadmap will created by gantt diagram page. First, sprints will be defined. Than subjects will be created and users organization accounts will add inside of the subject. Than inside the sprints, issues starts to creating. And default status is backlog.
+
+- Subjects are abstract parts about business rules. Example:
+- Issues are technical parts of projects
+
+Issue Dependecy Types : child of, blocker of,new version of, new feature of  
+Subject Dependecy Types : child of, new version of, next stage of
+
 
 ```mermaid
 erDiagram  
@@ -112,10 +117,44 @@ uint64 next_sprint
 uint64 prev_sprint
 
 }
-SPRINT ||--o|  SPRINT  : " can has next sptrint " 
-SPRINT ||--o|  SPRINT  : " can has prev sptrint " 
-SPRINT ||--o{  ISSUES  : "has" 
-SPRINT ||--o{  SUBJECT : "has"
+SPRINT ||--o|  SPRINT  : " can has next sprint " 
+SPRINT ||--o|  SPRINT  : " can has prev sprint " 
+SUBJECT |o--o{  ISSUES  : "has" 
+SPRINT |o--o{  SUBJECT : "has"
+PROJECT ||--o{  SUBJECT : "has"
+TEAM_MEMBERS ||--o{ ORGANIZATION_ACCOUNT : ""
+TEAM_MEMBERS ||--o{ TEAM : ""
+TEAM_MEMBERS {
+uint64 organization_account_id
+uint64 subject_id
+byte permissions
+}
+TEAM {
+uint64 team_id
+byte permissions
+uint64 project_id
+}
+PROJECT ||--o{ TEAM : ""
+ROLE {
+string nameID
+string resposiblelities
+byte default_permissions
+}
+TEAM_MEMBER_ROLE {
+string role_name
+uint64 team_member_id
+}
+DEPENDENT_SUBJECTS{
+uint64 issue
+uint64 dependentIssue
+uint8 dependencyType
+}
+DEPENDENT_SUBJECTS ||--o{  SUBJECT : "has issues"
+DEPENDENT_SUBJECTS ||--o{  SUBJECT : "has dependent issues"
+TEAM_MEMBERS ||--o{ TEAM_MEMBER_ROLE : ""
+TEAM_MEMBERS ||--o{ ISSUES : ""
+ROLE ||--o{ TEAM_MEMBER_ROLE : ""
+PROJECT ||--o{  ISSUES : "has child issues"
 ISSUES {
 ID uint64  
 Title string  
@@ -124,9 +163,10 @@ IssueForeignId string
 TargetTime uint32  
 SpendingTime uint32  
 Progress uint8  
+Label uint8
 SubjectID uint64  
 Subject Subject 
-ParentIssueID uint64  
+ProjectID uint64  
 StatusID uint8 
 ChildIssues Issue 
 DependentIssues Issue 
@@ -138,8 +178,12 @@ CreatedAt timeTime
 UpdatedAt timeime 
 DeletedAt gormDeletedAt 
 }
+DEPENDENT_ISSUES ||--o{  ISSUES : "has issues"
+DEPENDENT_ISSUES ||--o{  ISSUES : "has dependent issues"
 DEPENDENT_ISSUES {
-ID dependentI
+uint64 issue
+uint64 dependentIssue
+uint8 dependencyType
 }
 ORGANIZATION_ACCOUNT 
 SUBJECT {
@@ -150,11 +194,15 @@ RepoID string
 ProjectID uint64  
 Project Project 
 Issues Issue 
-Stages Stage
-User User 
-TeamLeaderID uint64  
-TeamLeader User 
+
 CreatedAt timeTime 
 UpdatedAt timeTime 
 DeletedAt gormDeletedAt 
 }
+
+
+```
+
+### Technical Notes
+#### User Permission System
+When user logged in, user will get organization permissions from ORGANIZATION_ACCOUNT table and team permissions from TEAM_MEMBER table ( which effects issue creation ) to token. Also user will get defaut role permissions from TEAM_MEMBER_ROLE table
