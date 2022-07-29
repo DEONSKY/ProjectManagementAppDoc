@@ -74,6 +74,25 @@ time deleted_at
  }
  ORGANIZATION ||--o{  PROJECT  : "contains projects"  
  ORGANIZATION_ACCOUNT ||--o{  PROJECT  : "has project responseible"  
+
+ CHAT_SERVICE_PROJECT_CHANNEL ||--||  PROJECT  : "has" 
+ 
+```
+settings example: Work in progress limit, 
+
+### Project Roadmap
+
+Project Roadmap will created by gantt diagram page. First, sprints will be defined. Than subjects will be created and users organization accounts will add inside of the subject. Than inside the sprints, issues starts to creating. And default status is backlog.
+
+- Subjects are abstract parts about business rules. Example: User subscription feature
+- Issues are technical parts of projects. Example Creating subscription update service
+
+Issue Dependecy Types : child of, blocker of,new version of, new feature of  
+Subject Dependecy Types : child of, new version of, next stage of
+
+
+```mermaid
+erDiagram  
  PROJECT {
 	uint64 id
 	string name
@@ -88,25 +107,9 @@ time deleted_at
 	time updated_at
 	tiem deleted_at
  }
- CHAT_SERVICE ||--o{  PROJECT  : "has" 
- CHAT_SERVICE 
-```
 
-### Project Roadmap
-
-Project Roadmap will created by gantt diagram page. First, sprints will be defined. Than subjects will be created and users organization accounts will add inside of the subject. Than inside the sprints, issues starts to creating. And default status is backlog.
-
-- Subjects are abstract parts about business rules. Example:
-- Issues are technical parts of projects
-
-Issue Dependecy Types : child of, blocker of,new version of, new feature of  
-Subject Dependecy Types : child of, new version of, next stage of
-
-
-```mermaid
-erDiagram  
-PROJECT
 PROJECT ||--o{  SPRINT  : "has" 
+
 SPRINT {
 uint64 id
 uint64 name
@@ -115,46 +118,35 @@ time start
 time end
 uint64 next_sprint
 uint64 prev_sprint
-
 }
+
 SPRINT ||--o|  SPRINT  : " can has next sprint " 
 SPRINT ||--o|  SPRINT  : " can has prev sprint " 
+
 SUBJECT |o--o{  ISSUES  : "has" 
 SPRINT |o--o{  SUBJECT : "has"
 PROJECT ||--o{  SUBJECT : "has"
-TEAM_MEMBERS ||--o{ ORGANIZATION_ACCOUNT : ""
-TEAM_MEMBERS ||--o{ TEAM : ""
-TEAM_MEMBERS {
-uint64 organization_account_id
-uint64 subject_id
-byte permissions
-}
-TEAM {
-uint64 team_id
-byte permissions
-uint64 project_id
-}
-PROJECT ||--o{ TEAM : ""
-ROLE {
-string nameID
-string resposiblelities
-byte default_permissions
-}
-TEAM_MEMBER_ROLE {
-string role_name
-uint64 team_member_id
-}
+
 DEPENDENT_SUBJECTS{
 uint64 issue
 uint64 dependentIssue
 uint8 dependencyType
 }
+
 DEPENDENT_SUBJECTS ||--o{  SUBJECT : "has issues"
 DEPENDENT_SUBJECTS ||--o{  SUBJECT : "has dependent issues"
-TEAM_MEMBERS ||--o{ TEAM_MEMBER_ROLE : ""
-TEAM_MEMBERS ||--o{ ISSUES : ""
-ROLE ||--o{ TEAM_MEMBER_ROLE : ""
+
+
 PROJECT ||--o{  ISSUES : "has child issues"
+
+ISSUES ||--o{  NOTES: ""
+ISSUES ||--||  ISSUE_CHAT_SERVICE: ""
+NOTES {
+ uint64 id
+ uint64 issue_id
+ string comment
+}
+
 ISSUES {
 ID uint64  
 Title string  
@@ -163,6 +155,7 @@ IssueForeignId string
 TargetTime uint32  
 SpendingTime uint32  
 Progress uint8  
+Impact uint8
 Label uint8
 SubjectID uint64  
 Subject Subject 
@@ -178,6 +171,7 @@ CreatedAt timeTime
 UpdatedAt timeime 
 DeletedAt gormDeletedAt 
 }
+
 DEPENDENT_ISSUES ||--o{  ISSUES : "has issues"
 DEPENDENT_ISSUES ||--o{  ISSUES : "has dependent issues"
 DEPENDENT_ISSUES {
@@ -185,7 +179,7 @@ uint64 issue
 uint64 dependentIssue
 uint8 dependencyType
 }
-ORGANIZATION_ACCOUNT 
+
 SUBJECT {
 ID uint64 
 Title string 
@@ -200,9 +194,53 @@ UpdatedAt timeTime
 DeletedAt gormDeletedAt 
 }
 
+TEAM_MEMBERS ||--o{ ISSUES : ""
 
+```
+
+```mermaid
+erDiagram 
+ORGANIZATION_ACCOUNT 
+
+ORGANIZATION_ACCOUNT ||--o{ TEAM_MEMBERS  : ""
+TEAM ||--o{ TEAM_MEMBERS : ""
+
+TEAM_MEMBERS {
+uint64 organization_account_id
+uint64 subject_id
+uint32 salary
+byte permissions
+}
+
+TEAM {
+uint64 team_id
+byte permissions
+uint64 project_id
+}
+
+PROJECT ||--o{ TEAM : ""
+TEAM ||--|| CHAT_SERVICE_TEAM_CHANNEL: ""
+
+ROLE {
+string nameID
+string resposiblelities
+byte default_permissions
+}
+
+TEAM_MEMBER_ROLE {
+string role_name
+uint64 team_member_id
+}
+
+TEAM_MEMBERS ||--o{ TEAM_MEMBER_ROLE : ""
+TEAM_MEMBERS ||--o{ ISSUES : ""
+
+ROLE ||--o{ TEAM_MEMBER_ROLE : ""
 ```
 
 ### Technical Notes
 #### User Permission System
 When user logged in, user will get organization permissions from ORGANIZATION_ACCOUNT table and team permissions from TEAM_MEMBER table ( which effects issue creation ) to token. Also user will get defaut role permissions from TEAM_MEMBER_ROLE table
+
+#### Posgres scaling
+We will sclae project database by project based. Looks like this example https://www.notion.so/blog/sharding-postgres-at-notion
