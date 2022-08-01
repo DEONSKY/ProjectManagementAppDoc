@@ -42,8 +42,8 @@ erDiagram
  string deleted_by
  
  }  
-  ORGANIZATION ||--o{  SPECIAL_ROLES  : "contains custom rules" 
-SPECIAL_ROLES {
+  ORGANIZATION ||--o{  ORGANIZATION_ROLES  : "contains custom rules" 
+ORGANIZATION_ROLES {
 uint64 id
 uint64 organization_id
 string role_id
@@ -60,6 +60,12 @@ time deleted_at
  uint64 organization_id  
  byte permissions
  }  
+ TOKEN {
+ uint64 id
+ string token
+ uint64 user_id
+ } 
+ USER ||--o{ TOKEN : "" 
  USER ||--o{  ORGANIZATION_ACCOUNT  : "can join multiple organization" 
  USER {  
  uint64 id 
@@ -82,7 +88,7 @@ settings example: Work in progress limit,
 
 ### Project Roadmap
 
-Project Roadmap will created by gantt diagram page. First, sprints will be defined. Than subjects will be created and users organization accounts will add inside of the subject. Than inside the sprints, issues starts to creating. And default status is backlog.
+Project roadmap will started created from project defination. Than Project Manager started to creating sprints, subjects and issues. After that project parts starts to create. Parts are project sub features can be belonging to subject and sprint. And this parts have isseues. Isseues can be added parts after that parts are created.
 
 - Subjects are abstract parts about business rules. Example: User subscription feature
 - Issues are technical parts of projects. Example Creating subscription update service
@@ -120,12 +126,21 @@ uint64 next_sprint
 uint64 prev_sprint
 }
 
+PART {
+uint64 id
+uint64 subject_id
+uint64 sprint_id
+}
+
 SPRINT ||--o|  SPRINT  : " can has next sprint " 
 SPRINT ||--o|  SPRINT  : " can has prev sprint " 
 
-SUBJECT |o--o{  ISSUES  : "has" 
-SPRINT |o--o{  SUBJECT : "has"
 PROJECT ||--o{  SUBJECT : "has"
+
+SUBJECT |o--o{ PART :"has"
+SPRINT |o--o{ PART:"has"
+PART |o--o{ ISSUES: "has"
+
 
 DEPENDENT_SUBJECTS{
 uint64 issue
@@ -157,7 +172,7 @@ SpendingTime uint32
 Progress uint8  
 Impact uint8
 Label uint8
-SubjectID uint64  
+PartID uint64  
 Subject Subject 
 ProjectID uint64  
 StatusID uint8 
