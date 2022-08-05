@@ -21,9 +21,67 @@ must have been added by the organization.
 - Under organization with five users, it's free. But if it's more than that, a small price is needed monthly.
 - Projects and subjects have their own chat channels. (Agile manifesto 1.  principle)
 
+#### Diagram of User Service Database (postgresql):
 ```mermaid
 erDiagram  
- ORGANIZATION  ||--o{  ORGANIZATION_ACCOUNT  : "has employees or contribitors"  
+
+ TOKEN {
+ uint64 id
+ string token
+ uint64 user_id
+ } 
+ USER ||--o{ TOKEN : "" 
+ USER ||--o{  ORGANIZATION_ACCOUNT  : "can join multiple organization" 
+ USER {  
+ uint64 id 
+ string username
+ string name
+ string lastname
+ string email
+ string password
+ string avatar_link
+ time created_at
+ time updated_at
+ time deleted_at
+ }
+```
+settings example: Work in progress limit, 
+
+#### Diagram of Organization Service Database (postgresql):
+
+```mermaid
+erDiagram 
+ORGANIZATION_ACCOUNT 
+
+ORGANIZATION_ACCOUNT ||--o{ TEAM_MEMBERS  : ""
+TEAM ||--o{ TEAM_MEMBERS : ""
+
+TEAM_MEMBERS {
+uint64 organization_account_id
+uint64 subject_id
+uint32 salary
+byte permissions
+}
+
+TEAM {
+uint64 team_id
+byte permissions
+uint64 project_id
+}
+
+PROJECT ||--o{ TEAM : ""
+TEAM ||--|| CHAT_SERVICE_TEAM_CHANNEL: ""
+
+TEAM_MEMBER_ROLE {
+string role_name
+uint64 team_member_id
+}
+
+TEAM_MEMBERS ||--o{ TEAM_MEMBER_ROLE : ""
+TEAM_MEMBERS ||--o{ ISSUES : ""
+
+ORGANIZATION_ROLES ||--o{ TEAM_MEMBER_ROLE : ""
+ORGANIZATION  ||--o{  ORGANIZATION_ACCOUNT  : "has employees or contribitors"  
  ORGANIZATION  {  
  uint64 id
  string organization_name  
@@ -60,70 +118,84 @@ time deleted_at
  uint64 organization_id  
  byte permissions
  }  
- TOKEN {
- uint64 id
- string token
- uint64 user_id
- } 
- USER ||--o{ TOKEN : "" 
- USER ||--o{  ORGANIZATION_ACCOUNT  : "can join multiple organization" 
- USER {  
- uint64 id 
- string username
- string name
- string lastname
- string email
- string password
- time created_at
- time updated_at
- time deleted_at
- }
  ORGANIZATION ||--o{  PROJECT  : "contains projects"  
  ORGANIZATION_ACCOUNT ||--o{  PROJECT  : "has project responseible"  
-
+ USER ||--o{  ORGANIZATION_ACCOUNT  : "can join multiple organization" 
  CHAT_SERVICE_PROJECT_CHANNEL ||--||  PROJECT  : "has" 
- 
 ```
-settings example: Work in progress limit, 
 
 ### Project Roadmap
 
-Project roadmap will started created from project defination. Than Project Manager started to creating sprints, subjects and issues. After that project parts starts to create. Parts are project sub features can be belonging to subject and sprint. And this parts have isseues. Isseues can be added parts after that parts are created.
+Project roadmap will started created from project defination. Than Project Manager started to creating sprints, subjects and issues. After that project parts starts to create. Parts are project sub features can be belonging to subject and sprint. And this parts have isseues. Isseues can be added to parts after that parts are created.
 
-- Subjects are abstract parts about business rules. Example: User subscription feature
-- Issues are technical parts of projects. Example Creating subscription update service
+#### Project: Organization Projects
+- Name : Name of the project  [Min:1 Max:36 Required]
+- Description: Summary of the project [Min:1,Max:255 Required]
+- Documentation File: Detailed documentation of the project. It will be store project details with a basic CMS service. With using CMS service, user can create complex navigation structure around multiple files and contents. CMS service will create a folder for every project and create pages inside that.
+- Project Settings: Settings of the project. It will store as binary format.
+- Organization: Organization to which the project belongs
+- Project Responsible : Super user of project. Has all create update and get permissions
+- Start Date: Project planned start date
+- Due Date: Project planned end date
+
+#### Sprint: Project Sprints
+- Name: Defined name of sprint [Min:1 Max:36 Required]
+- Project: Project to whichthe project belongs.
+- Start: Sprint start time.
+- End: Sprint end time
+- Next Spirint
+- Previous Sprint
+
+#### Subject: Substract part
 
 Issue Dependecy Types : child of, blocker of,new version of, new feature of  
 Subject Dependecy Types : child of, new version of, next stage of
 
-
+#### Diagram of Project Service Database (postgresql):
 ```mermaid
 erDiagram  
  PROJECT {
 	uint64 id
 	string name
-	uint64 description_file_id
+	sting description
+	uint64 documentation_file_id
 	byte settings
 	uint64 organization_id
 	uint64 project_responsible_id
 	string scope_rules
+	money budget
 	time start_date
 	time due_date
 	time created_at
 	time updated_at
 	tiem deleted_at
  }
-
+ORGANIZATOIN ||--o{  PROJECT: "has"
 PROJECT ||--o{  SPRINT  : "has" 
+ORGANIZATION_ACCOUNT }|--o|  PROJECT: "project responsible" 
+CONTENT_SERVICE||--||  PROJECT: "documentation file" 
+HISTORY_SERVICE||--||  PROJECT: "project change history" 
+
+PROJECT||--o{  ADDTIONAL_USER_REQUEST : "project change history" 
+
+ADDTIONAL_USER_REQUEST {
+uint64 id
+string title
+string description
+time created_at
+time updated_at
+time deleted_at
+uint64 created_by
+}
 
 SPRINT {
 uint64 id
 uint64 name
 uint64 project_id
+money budget
+uint8 sprint_queue_number
 time start
 time end
-uint64 next_sprint
-uint64 prev_sprint
 }
 
 PART {
@@ -132,8 +204,6 @@ uint64 subject_id
 uint64 sprint_id
 }
 
-SPRINT ||--o|  SPRINT  : " can has next sprint " 
-SPRINT ||--o|  SPRINT  : " can has prev sprint " 
 
 PROJECT ||--o{  SUBJECT : "has"
 
@@ -154,6 +224,7 @@ DEPENDENT_SUBJECTS ||--o{  SUBJECT : "has dependent issues"
 
 PROJECT ||--o{  ISSUES : "has child issues"
 
+ISSUES ||--o{  NOTES: ""
 ISSUES ||--o{  NOTES: ""
 ISSUES ||--||  ISSUE_CHAT_SERVICE: ""
 NOTES {
@@ -187,18 +258,19 @@ UpdatedAt timeime
 DeletedAt gormDeletedAt 
 }
 
-DEPENDENT_ISSUES ||--o{  ISSUES : "has issues"
-DEPENDENT_ISSUES ||--o{  ISSUES : "has dependent issues"
+ISSUES ||--o{  DEPENDENT_ISSUES : "has issues"
+ISSUES ||--o{  DEPENDENT_ISSUES : "has dependent issues"
 DEPENDENT_ISSUES {
-uint64 issue
-uint64 dependentIssue
-uint8 dependencyType
+uint64_PK issue
+uint64_PK dependentIssue
+uint8_ENUM dependencyType
 }
 
 SUBJECT {
 ID uint64 
 Title string 
 Description string
+money budget
 RepoID string  
 ProjectID uint64  
 Project Project 
@@ -213,49 +285,15 @@ TEAM_MEMBERS ||--o{ ISSUES : ""
 
 ```
 
-```mermaid
-erDiagram 
-ORGANIZATION_ACCOUNT 
-
-ORGANIZATION_ACCOUNT ||--o{ TEAM_MEMBERS  : ""
-TEAM ||--o{ TEAM_MEMBERS : ""
-
-TEAM_MEMBERS {
-uint64 organization_account_id
-uint64 subject_id
-uint32 salary
-byte permissions
-}
-
-TEAM {
-uint64 team_id
-byte permissions
-uint64 project_id
-}
-
-PROJECT ||--o{ TEAM : ""
-TEAM ||--|| CHAT_SERVICE_TEAM_CHANNEL: ""
-
-ROLE {
-string nameID
-string resposiblelities
-byte default_permissions
-}
-
-TEAM_MEMBER_ROLE {
-string role_name
-uint64 team_member_id
-}
-
-TEAM_MEMBERS ||--o{ TEAM_MEMBER_ROLE : ""
-TEAM_MEMBERS ||--o{ ISSUES : ""
-
-ROLE ||--o{ TEAM_MEMBER_ROLE : ""
-```
-
 ### Technical Notes
 #### User Permission System
 When user logged in, user will get organization permissions from ORGANIZATION_ACCOUNT table and team permissions from TEAM_MEMBER table ( which effects issue creation ) to token. Also user will get defaut role permissions from TEAM_MEMBER_ROLE table
 
 #### Posgres scaling
-We will sclae project database by project based. Looks like this example https://www.notion.so/blog/sharding-postgres-at-notion
+We will scale project database by project based. Looks like this example https://www.notion.so/blog/sharding-postgres-at-notion
+
+#### Chat Service Specs
+- Every project and team has a chat group.
+- Inside this chat groups members create sub channels for subjects or issue. Exam
+
+
