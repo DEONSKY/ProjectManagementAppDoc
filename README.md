@@ -54,13 +54,14 @@ erDiagram
 ORGANIZATION_ACCOUNT 
 
 ORGANIZATION_ACCOUNT ||--o{ TEAM_MEMBERS  : ""
-TEAM ||--o{ TEAM_MEMBERS : ""
+TEAM |o--o{ TEAM_MEMBERS : ""
+PROJECT ||--o{ TEAM_MEMBERS : ""
 
 TEAM_MEMBERS {
-uint64 organization_account_id
-uint64 subject_id
-uint32 salary
-byte permissions
+	uint64 organization_account_id
+	uint64 project_id
+	money cost
+	byte permissions
 }
 
 TEAM {
@@ -80,10 +81,11 @@ uint64 team_member_id
 TEAM_MEMBERS ||--o{ TEAM_MEMBER_ROLE : ""
 TEAM_MEMBERS ||--o{ ISSUES : ""
 
-ORGANIZATION_ROLES ||--o{ TEAM_MEMBER_ROLE : ""
+TEAM_ROLES ||--o{ TEAM_MEMBER_ROLE : ""
 ORGANIZATION  ||--o{  ORGANIZATION_ACCOUNT  : "has employees or contribitors"  
  ORGANIZATION  {  
  uint64 id
+ uint64 organization_shard_id
  string organization_name  
  string name 
  string sector  
@@ -100,16 +102,30 @@ ORGANIZATION  ||--o{  ORGANIZATION_ACCOUNT  : "has employees or contribitors"
  string deleted_by
  
  }  
-  ORGANIZATION ||--o{  ORGANIZATION_ROLES  : "contains custom rules" 
+ORGANIZATION |o--o{  ORGANIZATION_ROLES  : "contains custom rules" 
+ORGANIZATION |o--o{  TEAM_ROLES  : "contains custom rules" 
+
+ORGANIZATION_ACCOUNT ||--o{  ORGANIZATION_ACCOUNT_ROLES  : "contains custom rules" 
+ORGANIZATION_ROLES ||--o{  ORGANIZATION_ACCOUNT_ROLES  : "contains custom rules" 
+
+ORGANIZATION_ACCOUNT_ROLES {
+	uint64_PK organization_role_id
+	uint64_PK organization_account_id
+}
+
+TEAM_ROLES {
+	uint64_PK team_role_id
+	uint64_PK team_member_id
+}
+
 ORGANIZATION_ROLES {
-uint64 id
-uint64 organization_id
-string role_id
-string hex_color
-byte user_permissions
-time created_at
-time updated_at
-time deleted_at
+	uint64 id
+	uint64 organization_id
+	string hex_color
+	byte user_permissions
+	time created_at
+	time updated_at
+	time deleted_at
 
 }
  ORGANIZATION_ACCOUNT  {  
@@ -159,7 +175,7 @@ erDiagram
 	uint64 id
 	string name
 	sting description
-	uint64 documentation_file_id
+	string documentation_file_id
 	byte settings
 	uint64 organization_id
 	uint64 project_responsible_id
@@ -180,24 +196,25 @@ HISTORY_SERVICE||--||  PROJECT: "project change history"
 PROJECT||--o{  ADDTIONAL_CUSTOMER_REQUEST : "project can have multiple user request" 
 
 ADDTIONAL_CUSTOMER_REQUEST {
-uint64 id
-string title
-string description
-time created_at
-time updated_at
-time deleted_at
-uint64 created_by
+	uint64 id
+	uint64 pro
+	string title
+	string description
+	time created_at
+	time updated_at
+	time deleted_at
+	uint64 created_by
 }
 
 SPRINT {
-uint64 id
-uint64 name
-uint64 project_id
-money budget
-uint8 status
-uint8 sprint_queue_number
-time start
-time end
+	uint64 id
+	uint64 name
+	uint64 project_id
+	money budget
+	uint8 status
+	uint8 sprint_queue_number
+	time start
+	time end
 }
 
 PROJECT ||--o{  SUBJECT : "has"
@@ -207,9 +224,9 @@ SPRINT |o--o{ ISSUES:"has"
 
 
 DEPENDENT_SUBJECTS{
-uint64 issue
-uint64 dependentIssue
-uint8 dependencyType
+	uint64 issue
+	uint64 dependentIssue
+	uint8 dependencyType
 }
 
 DEPENDENT_SUBJECTS ||--o{  SUBJECT : "has issues"
@@ -217,64 +234,62 @@ DEPENDENT_SUBJECTS ||--o{  SUBJECT : "has dependent issues"
 
 
 PROJECT ||--o{  ISSUES : "has child issues"
-
 ISSUES ||--o{  NOTES: ""
 ISSUES ||--o{  NOTES: ""
 ISSUES ||--||  ISSUE_CHAT_SERVICE: ""
+
 NOTES {
- uint64 id
- uint64 issue_id
- string comment
+	uint64 id
+	uint64 issue_id
+	string comment
 }
 
 ISSUES {
-ID uint64  
-Title string  
-Description string  
-IssueForeignId string  
-TargetTime uint32  
-SpendingTime uint32  
-Progress uint8  
-Impact uint8
-Label uint8
-Status uint8
-PartID uint64  
-Subject Subject 
-ProjectID uint64  
-StatusID uint8 
-ChildIssues Issue 
-DependentIssues Issue 
-ReporterID uint64 
-Reporter User 
-AssignieID uint64  
-Assignie User 
-DueDate time
-CreatedAt timeTime 
-UpdatedAt timeime 
-DeletedAt gormDeletedAt 
+	ID uint64  
+	Title string  
+	Description string  
+	IssueForeignId string  
+	TargetTime uint32  
+	SpendingTime uint32  
+	Progress uint8  
+	Impact uint8
+	Label uint8
+	Status uint8
+	PartID uint64  
+	Subject Subject 
+	ProjectID uint64  
+	StatusID uint8 
+	ChildIssues Issue 
+	DependentIssues Issue 
+	ReporterID uint64 
+	Reporter User 
+	AssignieID uint64  
+	Assignie User 
+	DueDate time
+	CreatedAt timeTime 
+	UpdatedAt timeime 
+	DeletedAt gormDeletedAt 
 }
 
 ISSUES ||--o{  ISSUE_DEPENDECY : "has issues"
 ISSUES ||--o{  ISSUE_DEPENDECY : "has dependent issues"
 ISSUE_DEPENDECY {
-uint64_PK issue
-uint64_PK dependentIssue
-uint8_ENUM_PK dependencyType
+	uint64_PK issue
+	uint64_PK dependentIssue
+	uint8_ENUM_PK dependencyType
 }
 
 SUBJECT {
-ID uint64 
-Title string 
-Description string
-money budget
-RepoID string  
-ProjectID uint64  
-Project Project 
-Issues Issue 
-
-CreatedAt timeTime 
-UpdatedAt timeTime 
-DeletedAt gormDeletedAt 
+	ID uint64 
+	Title string 
+	Description string
+	string documentation_file_id
+	ProjectID uint64  
+	Project Project 
+	Issues Issue 
+	CreatedAt timeTime 
+	UpdatedAt timeTime 
+	DeletedAt gormDeletedAt 
 }
 
 TEAM_MEMBERS ||--o{ ISSUES : ""
@@ -282,18 +297,44 @@ TEAM_MEMBERS ||--o{ ISSUES : ""
 ```
 
 ### Technical Notes
+
 #### User Permission System
-When user logged in, user will get organization permissions from ORGANIZATION_ACCOUNT table and team permissions from TEAM_MEMBER table ( which effects issue creation ) to token. Also user will get defaut role permissions from TEAM_MEMBER_ROLE table
+
+When user logged in, user will get organization permissions from ORGANIZATION_ACCOUNT table and team permissions from TEAM_MEMBER table for  token. Also user will get defaut role permissions from TEAM_MEMBER_ROLE table
+ORGANIZATION_ACCOUNT permissions.
+
+rwud = read write update delete. chmod like permission system 
+Examples:
+ 0010 = 2 update
+ 1100 = 12 read and write
+ **Note:** write permission also can update if entity created by same user. But with update permission user can update another entitys wich created by another organization members.
+
+- organizationID:0(issue):rwud - organization based global issue permissions
+- organizationID:1(project):rwud - organization based global project permissions
+- organizationID:2(subject):rwud - organization based global subject permissions- 
+- organizationID:3(sprint):rwud - organization based global sprint permissions
+- organizationID:4(organization):rwud - organization based global organization permissions
+
+- projectID:0(issue):rwud - project based global issue permissions
+- projectID:1(project):rwud - project based global project permissions
+- projectID:2(subject):rwud - project based global subject permissions
+- projectID:3(sprint):rwud - project based global sprint permissions
 
 #### Posgres scaling
+
 We will scale project database by project based. Looks like this example https://www.notion.so/blog/sharding-postgres-at-notion
+
+I decide to test sharding structure with 
+|Physical db 1                          |Physical db 2       |
+|-------------------------------|-----------------------------|
+Logical Shard 1          | Logical Shard 1             |
+Logical Shard 2              |Logical Shard 2            |
+And also, i need to create shard mapping file for physical databases
+drdkkan7uub4l -> project_shard_id -> 1
+drdkkan7uub5l -> project_shard_id -> 2
+
+When user getting permissions from organization service also get informantion of which shard includes organization projects. This information will be store inside the redis cache. If cache not include this data, user can get project_shard_id from organization service
 
 #### Chat Service Specs
 - Every project and team has a chat group.
 - Inside this chat groups members create sub channels for subjects or issue. Exam
-
-
-
-### Content Service
-
-Content Serivice is 
