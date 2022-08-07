@@ -113,9 +113,8 @@ time deleted_at
 
 }
  ORGANIZATION_ACCOUNT  {  
- uint64 id
- uint64 user_id  
- uint64 organization_id  
+ uint64_PK user_id  
+ uint64_PK organization_id  
  byte permissions
  }  
  ORGANIZATION ||--o{  PROJECT  : "contains projects"  
@@ -127,6 +126,8 @@ time deleted_at
 ### Project Roadmap
 
 Project roadmap will started created from project defination. Than Project Manager started to creating sprints, subjects and issues. After that project parts starts to create. Parts are project sub features can be belonging to subject and sprint. And this parts have isseues. Isseues can be added to parts after that parts are created.
+
+Users will have personal workload feature
 
 #### Project: Organization Projects
 - Name : Name of the project  [Min:1 Max:36 Required]
@@ -148,8 +149,8 @@ Project roadmap will started created from project defination. Than Project Manag
 
 #### Subject: Substract part
 
-Issue Dependecy Types : child of, blocker of,new version of, new feature of  
-Subject Dependecy Types : child of, new version of, next stage of
+Issue Dependecy Types : child of, blocker of,new version of, new feature of , Finish to start (FS), Finish to finish (FF), Start to start (SS), Start to finish (SF)
+Subject Dependecy Types : child of, new version of, next stage of, Finish to start (FS), Finish to finish (FF), Start to start (SS), Start to finish (SF)
 
 #### Diagram of Project Service Database (postgresql):
 ```mermaid
@@ -176,9 +177,9 @@ ORGANIZATION_ACCOUNT }|--o|  PROJECT: "project responsible"
 CONTENT_SERVICE||--||  PROJECT: "documentation file" 
 HISTORY_SERVICE||--||  PROJECT: "project change history" 
 
-PROJECT||--o{  ADDTIONAL_USER_REQUEST : "project change history" 
+PROJECT||--o{  ADDTIONAL_CUSTOMER_REQUEST : "project can have multiple user request" 
 
-ADDTIONAL_USER_REQUEST {
+ADDTIONAL_CUSTOMER_REQUEST {
 uint64 id
 string title
 string description
@@ -193,23 +194,16 @@ uint64 id
 uint64 name
 uint64 project_id
 money budget
+uint8 status
 uint8 sprint_queue_number
 time start
 time end
 }
 
-PART {
-uint64 id
-uint64 subject_id
-uint64 sprint_id
-}
-
-
 PROJECT ||--o{  SUBJECT : "has"
 
-SUBJECT |o--o{ PART :"has"
-SPRINT |o--o{ PART:"has"
-PART |o--o{ ISSUES: "has"
+SUBJECT |o--o{ ISSUES:"has"
+SPRINT |o--o{ ISSUES:"has"
 
 
 DEPENDENT_SUBJECTS{
@@ -243,6 +237,7 @@ SpendingTime uint32
 Progress uint8  
 Impact uint8
 Label uint8
+Status uint8
 PartID uint64  
 Subject Subject 
 ProjectID uint64  
@@ -253,17 +248,18 @@ ReporterID uint64
 Reporter User 
 AssignieID uint64  
 Assignie User 
+DueDate time
 CreatedAt timeTime 
 UpdatedAt timeime 
 DeletedAt gormDeletedAt 
 }
 
-ISSUES ||--o{  DEPENDENT_ISSUES : "has issues"
-ISSUES ||--o{  DEPENDENT_ISSUES : "has dependent issues"
-DEPENDENT_ISSUES {
+ISSUES ||--o{  ISSUE_DEPENDECY : "has issues"
+ISSUES ||--o{  ISSUE_DEPENDECY : "has dependent issues"
+ISSUE_DEPENDECY {
 uint64_PK issue
 uint64_PK dependentIssue
-uint8_ENUM dependencyType
+uint8_ENUM_PK dependencyType
 }
 
 SUBJECT {
@@ -297,3 +293,7 @@ We will scale project database by project based. Looks like this example https:/
 - Inside this chat groups members create sub channels for subjects or issue. Exam
 
 
+
+### Content Service
+
+Content Serivice is 
