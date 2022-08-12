@@ -7,11 +7,11 @@ Project Management System is a tool that helps working with multiple project man
 
 The main inspiration for project management systems is project management methodologies.
 
-## Agile Project Management
+# Agile Project Management
 
-### Project Planing 
+## Project Planing 
 The end goal will be determined in the project description. But I think this shouldn't be plain text. We can use a md file for write a description. This description will include main project goals. And it can also include diagrams charts and images about the project. We save this description in CMS servise. Because description field works like wordpress website. For this reason we have a CMS service for pages and diagrams. Also in this stage, subjects(teams that working on specific field of the project) will be created. And empleeyes will be assigned for this subjects.  	  			
-- Every subject has an team leader. Team leader can only assign empoyees to a subject.
+-  Every subject has an team leader. Team leader can only assign empoyees to a subject.
 -  For assigning employees for a subject, employee   
 must have been added by the organization. 
 - If a user is directly connected to an organization and working for them, a user account will connect to the organization. User account and organization including many2many connections, due to a user can be working at one company and for its organization. 
@@ -21,7 +21,7 @@ must have been added by the organization.
 - Under organization with five users, it's free. But if it's more than that, a small price is needed monthly.
 - Projects and subjects have their own chat channels. (Agile manifesto 1.  principle)
 
-#### Diagram of User Service Database (postgresql):
+### Diagram of User Service Database (postgresql):
 ```mermaid
 erDiagram  
 
@@ -47,7 +47,7 @@ erDiagram
 ```
 settings example: Work in progress limit, 
 
-#### Diagram of Organization Service Database (postgresql):
+### Diagram of Organization Service Database (postgresql):
 
 ```mermaid
 erDiagram 
@@ -139,13 +139,13 @@ ORGANIZATION_ROLES {
  CHAT_SERVICE_PROJECT_CHANNEL ||--||  PROJECT  : "has" 
 ```
 
-### Project Roadmap
+## Project Roadmap
 
 Project roadmap will started created from project defination. Than Project Manager started to creating sprints, subjects and issues. After that project parts starts to create. Parts are project sub features can be belonging to subject and sprint. And this parts have isseues. Isseues can be added to parts after that parts are created.
 
 Users will have personal workload feature
 
-#### Project: Organization Projects
+### Project: Organization Projects
 - Name : Name of the project  [Min:1 Max:36 Required]
 - Description: Summary of the project [Min:1,Max:255 Required]
 - Documentation File: Detailed documentation of the project. It will be store project details with a basic CMS service. With using CMS service, user can create complex navigation structure around multiple files and contents. CMS service will create a folder for every project and create pages inside that.
@@ -155,7 +155,7 @@ Users will have personal workload feature
 - Start Date: Project planned start date
 - Due Date: Project planned end date
 
-#### Sprint: Project Sprints
+### Sprint: Project Sprints
 - Name: Defined name of sprint [Min:1 Max:36 Required]
 - Project: Project to whichthe project belongs.
 - Start: Sprint start time.
@@ -163,10 +163,79 @@ Users will have personal workload feature
 - Next Spirint
 - Previous Sprint
 
-#### Subject: Substract part
+### Subject: Substract part
+
+|Project | Parent Subject | Subject | Parent Issue | Issue |Child Issues|
+|-|-|-|-|-|-|
+Project Management Application | Project Module | View System | View Creation Pages| Kanban View Creation Page | Kanban View Creation Page Design / Input Component Creation / Form Creation        |
+|
+
+
 
 Issue Dependecy Types : child of, blocker of,new version of, new feature of , Finish to start (FS), Finish to finish (FF), Start to start (SS), Start to finish (SF)
 Subject Dependecy Types : child of, new version of, next stage of, Finish to start (FS), Finish to finish (FF), Start to start (SS), Start to finish (SF)
+
+### View Slot System (Kanban, Gantt vs)
+Every view has an predifined slot structures inside code. And user can define which parameters will be part of this structure. With an frontend interface user can design which parameters show where. Service will control this definations match with schema limitations, and save this structure as json format inside view structure. All keys are reserved and validated keywords.
+
+#### Example Kanban View Format
+```
+{
+	title : [
+		project_issue_id
+		issue_name
+	]
+	upright_corner: [
+		assinie_image: url
+		assignie_name
+	],
+	bottomright_corner : [
+		due_date: 
+		
+	],
+	bottomeleft_corner : [
+	
+	],
+	line_percentage: {
+		(total_checkount)
+		(checked_check_count)
+	}
+	description_paper:{
+		title : [
+			project_issue_id
+			issue_name,
+		]
+
+	}
+	
+
+}
+```
+#### Example List View Format
+```
+	column_list:[
+		issue_name
+		issue_due_date
+		issue_priority
+		etc...
+	]
+```
+
+### Automation Service
+
+Automation service will include trigger, control and effect properties. Trigger is describes to events starting the process. And effects describes the process after trigger happend. Every possible trigger and effect described inside code. Also triggers can connect each other "or" combiners. When trigger event published, target fields controlled by control layer. This layer includes chained statements by "and" or "or". After that mulpile effects can run if all controls passed. If automations are enabled, this automations added to automation service redis cache. When
+
+#### Diagram of Automaton Service Database (mongodb):
+
+```
+{
+	_id
+	project_id
+	triggers: []
+	controls: []
+	effects: []
+}
+```
 
 #### Diagram of Project Service Database (postgresql):
 ```mermaid
@@ -232,6 +301,16 @@ DEPENDENT_SUBJECTS{
 DEPENDENT_SUBJECTS ||--o{  SUBJECT : "has issues"
 DEPENDENT_SUBJECTS ||--o{  SUBJECT : "has dependent issues"
 
+PROJECT ||--o{  VIEWS: "has dependent issues"
+
+VIEWS {
+  uint64 id
+  string name
+  jsonb view_structure
+  uint64 userID
+  date created_at
+  date updated_at
+}
 
 PROJECT ||--o{  ISSUES : "has child issues"
 ISSUES ||--o{  NOTES: ""
@@ -242,6 +321,7 @@ NOTES {
 	uint64 id
 	uint64 issue_id
 	string comment
+	uint64 created_by
 }
 
 ISSUES {
@@ -255,7 +335,7 @@ ISSUES {
 	Impact uint8
 	Label uint8
 	Status uint8
-	PartID uint64  
+	uint8 height 
 	Subject Subject 
 	ProjectID uint64  
 	StatusID uint8 
@@ -269,6 +349,24 @@ ISSUES {
 	CreatedAt timeTime 
 	UpdatedAt timeime 
 	DeletedAt gormDeletedAt 
+}
+
+ISSUES ||--o{ WORKLOG : ""
+WORKLOG {
+	uint64 id
+	uint8 spending_time
+	string log
+	time createdAt
+	time updatedAt
+	time deletedAt
+	uint64 log_owner
+	
+}
+ISSUES ||--o{ CHECKLIST: ""
+CHECKLIST{
+	uint64 id
+	string name
+	boolean checked
 }
 
 ISSUES ||--o{  ISSUE_DEPENDECY : "has issues"
@@ -296,9 +394,62 @@ TEAM_MEMBERS ||--o{ ISSUES : ""
 
 ```
 
-### Technical Notes
+### Project schema example (mongodb version)
+```
+project_collection:
 
-#### User Permission System
+{
+  ...project_fields
+  sprints: [
+    {
+      ...sprint_fields,
+    }
+  ],
+  subjects: [
+    {
+      ...subject_fields,
+      dependent_subjects: [{
+        _id
+        name
+      }]
+      dependent_issues: [{
+        _id
+        name
+      }]
+    }
+  ],
+  issues: [
+    {
+      _id
+      ...issue_fields,
+      dependent_issues: [{
+        _id
+        name
+      }]
+      subject : {
+        _id
+        name
+      }
+      sprintName: {
+        _id
+        name
+      }
+    },
+    addtional_customer_requests: [{
+	  id
+      title 
+      description
+      crated_at
+      updated_at
+      deleted_at
+      created_by
+  }],
+ 
+```
+
+## Technical Notes
+
+### User Permission System
 
 When user logged in, user will get organization permissions from ORGANIZATION_ACCOUNT table and team permissions from TEAM_MEMBER table for  token. Also user will get defaut role permissions from TEAM_MEMBER_ROLE table
 ORGANIZATION_ACCOUNT permissions.
@@ -320,7 +471,7 @@ Examples:
 - projectID:2(subject):rwud - project based global subject permissions
 - projectID:3(sprint):rwud - project based global sprint permissions
 
-#### Posgres scaling
+### Posgres scaling
 
 We will scale project database by project based. Looks like this example https://www.notion.so/blog/sharding-postgres-at-notion
 
@@ -335,6 +486,68 @@ drdkkan7uub5l -> project_shard_id -> 2
 
 When user getting permissions from organization service also get informantion of which shard includes organization projects. This information will be store inside the redis cache. If cache not include this data, user can get project_shard_id from organization service
 
-#### Chat Service Specs
+## Chat Service Specs
 - Every project and team has a chat group.
-- Inside this chat groups members create sub channels for subjects or issue. Exam
+- Inside this chat groups members create sub channels for subjects or issue. 
+
+
+
+## Content Service
+
+Content Service is a service for project, subject or issue documentation.  This service can store markdown files as pages or nested pages.
+
+### Shema of Content Service Pages (Mongodb)
+documentation_collection example
+```
+{
+	_id
+	name
+	pages: [{
+		id
+		name
+		markdownFileSource
+		pages:[{
+			id
+			name
+			markdownFileSource
+		}]
+	}]
+	createdAt
+	updatedAt
+	deletedAt
+	createdBy
+	updatedBy
+	deletedBy
+}
+```
+
+### Logger Service
+
+Logger service will use mongodb for storing logs. With this way accesing log data will be more easy.  
+Example general logging schema will be this way generally.
+```
+{
+  level
+  datetime
+  request_id
+  service_id
+  user_id
+  message_id
+  (and more optional fields)
+}
+```
+Every service and subparts will have their own collection.
+
+### History Service 
+
+This service is similar with logger service. But it includes less detail and data then user service. And stores data which we want to show users with history pages. Isseues, subjects, sprint and issues have history pages.
+
+Example Issue History Collection:
+```
+{
+  responsible_id
+  responsible_name
+  action
+  date
+}
+```
