@@ -3,23 +3,65 @@
 Project Management System is a tool that helps working with multiple project management methodologies. 
 
 
-# Methodologies
+## Main Goals
+Project management system should isolate complexity of all project from contributers and employees. It should also provide flexibility. But this flexibility should not risk the simplicity of structure. 
+- Organization users should be managed easily and isolated by teams. Users inherit permission from organization and team. Also they can have custom permission can give by super users. This provides hiding unecessary subjects and tasks from user, also prevents unauthorized creating, update, deletions. And inheritance provides easy general permission changes.
+- Roadmap of the project and team responsibilies must be clear. Every teams is associated with execution group. This groups includes execution plans. This plans can be sprint or other types.
+- Complex projects should seperate to multiple simple parts. And this parts can include hierachical parent parts. This parts are subjects. 
+- Documentation is important part of projects. Every subject can include its own embeded documentation file. Users can route between this files by sidebar.
+- Every task is assocaited by a subject. And best practice is every task should be related with a one meaningful subject.
+- Tasks should have dynamic fields. And this dynamic field types are predefined structure with server and frontend logic. This fields can be required or nullable
+- Tasks should have static default fields. Every task will include them.
+- Subjects can include multiple view types. Also this views can be filtered, ordered by fields. Users can select which field will be display or hide
+- Authorized users can create reports with multiple chart types. Reports can be filtered, ordered by fields. Users can select which fields will be displayed. This part has similarity with views. But reports are only read only.Reports cant manuplate the data. But it can include charts with historical data, which views cannot do. 
+- PMS will be include chat service.
+- Every user can have favorite subjects or tasks for easy access.
+- PMS will be include notification service
 
-The main inspiration for project management systems is project management methodologies.
+## Features
+### Account
 
-# Agile Project Management
+Users need to create an account to use this application. This account includes:
+- username [required, min:1 max: 24]
+- password [required, min:1, max: 48]
+- name [required, min:1, max: 48]
+- lastname [required, min:1, max: 48]
+- avatar_profile_picture [default: random default picture]
+- email: [required, email_format]
+- telephone : [nullable, format telephone no] (for two factor authentication)
 
-## Project Planing 
-The end goal will be determined in the project description. But I think this shouldn't be plain text. We can use a md file for write a description. This description will include main project goals. And it can also include diagrams charts and images about the project. We save this description in CMS servise. Because description field works like wordpress website. For this reason we have a CMS service for pages and diagrams. Also in this stage, subjects(teams that working on specific field of the project) will be created. And empleeyes will be assigned for this subjects.  	  			
--  Every subject has an team leader. Team leader can only assign empoyees to a subject.
--  For assigning employees for a subject, employee   
-must have been added by the organization. 
-- If a user is directly connected to an organization and working for them, a user account will connect to the organization. User account and organization including many2many connections, due to a user can be working at one company and for its organization. 
-- But at the same time user can have a side project with other people. For managing this project easily than can create another organization account. 
-- From the project setting, they can make their project read-only for all users. If they want, they can give issue create permissions for external issues. These issues can be bugs or needing extra features. With this platform, the organization can easily manage user feedback. (Agile manifesto 3-4.  principle)
-- Or you can create guest organization accounts only for customers. And customers can directly watch project development phases. And they can explain, if some pieces of application not fully understood. (Agile manifesto 3-4.  principle)
-- Under organization with five users, it's free. But if it's more than that, a small price is needed monthly.
-- Projects and subjects have their own chat channels. (Agile manifesto 1.  principle)
+### Workspace 
+Workspace is the main working environment of an organization. Includes teams, permissions, workspace accounts, chat and notification channels, predefined templates, roles. Workspace is a reflection of the organizational structure of company or group. But workspace abilities takes shape with selected application plan.
+
+- organization_name [required, min:1, max: 48]
+- avatar_picture [default: random default picture]
+- organization_super_user
+- settings
+- default_member_permissions [organization:gur(hides settings)d, project:gcrud, subject:gcrud, task:gcrud, view:gcrud, report:gcrud, automation:gcrud, execution_plan:gcrud, chat:gcrud, team:gcrud] (g:general_access, c: create, u: update, r: read, d: delete). Also this permissions has static logic groups. If user can update or delete project, at the same time user has a permission automaticly for subject and task update or delete process. Same thing avaible for subject. For read operations this works in reverse. If user read subject, user can display  projects. This permissions can be general or it needs to associatied with subject or project
+- application_plan [required, default free]
+- last_payment_date [nullable]
+
+### Workspace Roles
+Workspace roles structure is like wokspace default member permissions.Its function is groups permissions by member roles. Default organization roles are not changeable on workspace roles. Workspace roles can only manage addtional permissions. If a permission is not general workspace account needs to be assoicated with projects or subjects for execute this permissions.
+
+- name [required, min:1, max: 48]
+- hex_color [required: min:1 max: 6]
+- permissions
+
+### Workspace Account
+Every user needs workspace account for join workspace. This account includes role associations, favorites, projects, subject associations and salary.
+
+- permissions
+- salary
+
+### Team 
+Workspace accounts can group by teams. Every team has own chat channel. Team Leader can change team name, description and members or another user with permissions can update team properties.
+
+- name [required, min:1, max: 48]
+- desciptrion [nullable, min:1, max: 512]
+- members
+
+
 
 ### Diagram of User Service Database (postgresql):
 ```mermaid
@@ -51,18 +93,13 @@ settings example: Work in progress limit,
 
 ```mermaid
 erDiagram 
-ORGANIZATION_ACCOUNT 
+WORKSPACE_ACCOUNT 
 
-ORGANIZATION_ACCOUNT ||--o{ TEAM_MEMBERS  : ""
-TEAM |o--o{ TEAM_MEMBERS : ""
-PROJECT ||--o{ TEAM_MEMBERS : ""
+WORKSPACE_ACCOUNT }o--o{ TEAM : ""
 
-TEAM_MEMBERS {
-	uint64 organization_account_id
-	uint64 project_id
-	money cost
-	byte permissions
-}
+WORKSPACE |o--o{ TEAM : ""
+
+
 
 TEAM {
 uint64 team_id
@@ -73,20 +110,16 @@ uint64 project_id
 PROJECT ||--o{ TEAM : ""
 TEAM ||--|| CHAT_SERVICE_TEAM_CHANNEL: ""
 
-TEAM_MEMBER_ROLE {
-string role_name
-uint64 team_member_id
-}
 
-TEAM_MEMBERS ||--o{ TEAM_MEMBER_ROLE : ""
-TEAM_MEMBERS ||--o{ ISSUES : ""
 
-TEAM_ROLES ||--o{ TEAM_MEMBER_ROLE : ""
-ORGANIZATION  ||--o{  ORGANIZATION_ACCOUNT  : "has employees or contribitors"  
- ORGANIZATION  {  
+WORKSPACE_ACCOUNT||--o{ ISSUES : ""
+
+
+WORKSPACE  ||--o{  WORKSPACE_ACCOUNT  : "has employees or contribitors"  
+ WORKSPACE  {  
  uint64 id
- uint64 organization_shard_id
- string organization_name  
+ uint64 WORKSPACE_shard_id
+ string WORKSPACE_name  
  string name 
  string sector  
  uint64 ceo
@@ -102,25 +135,14 @@ ORGANIZATION  ||--o{  ORGANIZATION_ACCOUNT  : "has employees or contribitors"
  string deleted_by
  
  }  
-ORGANIZATION |o--o{  ORGANIZATION_ROLES  : "contains custom rules" 
-ORGANIZATION |o--o{  TEAM_ROLES  : "contains custom rules" 
+WORKSPACE |o--o{  WORKSPACE_ROLES  : "contains custom rules" 
 
-ORGANIZATION_ACCOUNT ||--o{  ORGANIZATION_ACCOUNT_ROLES  : "contains custom rules" 
-ORGANIZATION_ROLES ||--o{  ORGANIZATION_ACCOUNT_ROLES  : "contains custom rules" 
+WORKSPACE_ACCOUNT }o--o{  WORKSPACE_ROLES  : "contains custom rules" 
 
-ORGANIZATION_ACCOUNT_ROLES {
-	uint64_PK organization_role_id
-	uint64_PK organization_account_id
-}
 
-TEAM_ROLES {
-	uint64_PK team_role_id
-	uint64_PK team_member_id
-}
-
-ORGANIZATION_ROLES {
+WORKSPACE_ROLES {
 	uint64 id
-	uint64 organization_id
+	uint64 WORKSPACE_id
 	string hex_color
 	byte user_permissions
 	time created_at
@@ -128,25 +150,17 @@ ORGANIZATION_ROLES {
 	time deleted_at
 
 }
- ORGANIZATION_ACCOUNT  {  
+ WORKSPACE_ACCOUNT  {  
  uint64_PK user_id  
- uint64_PK organization_id  
+ uint64_PK WORKSPACE_id  
  byte permissions
  }  
- ORGANIZATION ||--o{  PROJECT  : "contains projects"  
- ORGANIZATION_ACCOUNT ||--o{  PROJECT  : "has project responseible"  
- USER ||--o{  ORGANIZATION_ACCOUNT  : "can join multiple organization" 
+ WORKSPACE ||--o{  PROJECT  : "contains projects"  
+ WORKSPACE_ACCOUNT ||--o{  PROJECT  : "has project responseible"  
+ USER ||--o{  WORKSPACE_ACCOUNT  : "can join multiple WORKSPACE" 
  CHAT_SERVICE_PROJECT_CHANNEL ||--||  PROJECT  : "has" 
 ```
 
-## Project Roadmap
-
-Project roadmap will started created from project defination. Than Project Manager started to creating sprints, subjects and issues. After that project parts starts to create. Parts are project sub features can be belonging to subject and sprint. And this parts have isseues. Isseues can be added to parts after that parts are created.
-
-Users will have personal workload feature
-Color based customizable theme
-
-### User use cases
 
 ### Project: Organization Projects
 - Name : Name of the project. Every organization-name combination must be uniqeu.    [Min:1 Max:36 Required, unique(organizationId,name)] 
@@ -303,7 +317,7 @@ ORGANIZATION_ACCOUNT }|--o|  PROJECT: "project responsible"
 CONTENT_SERVICE||--||  PROJECT: "documentation file" 
 HISTORY_SERVICE||--||  PROJECT: "project change history" 
 
-SPRINT {
+EXECUTION_PLAN {
 	uint64 id
 	uint64 name
 	uint64 project_id
@@ -318,10 +332,10 @@ PROJECT ||--o{  SUBJECT : "has"
 SUBJECT ||--o{  VIEWS : "has"
 
 SUBJECT |o--o{ ISSUES:"has"
-SPRINT |o--o{ ISSUES:"has"
+EXECUTION_PLAN|o--o{ ISSUES:"has"
 
-PROJECT ||--o{ SPRINT_GROUP : ""
-SPRINT_GROUP ||--o{ SPRINT : ""
+PROJECT ||--o{ EXECUTION_GROUP : ""
+EXECUTION_GROUP ||--o{ EXECUTION_PLAN: ""
 
 SUBJECT ||--o{  SUBJECT : "has child subjects"
 
@@ -467,9 +481,9 @@ project_collection:
 
 {
   ...project_fields
-  sprints: [
+  executıon_plans: [
     {
-      ...sprint_fields,
+      ...execution_plan_fields,
     }
   ],
   subjects: [
@@ -493,7 +507,7 @@ project_collection:
         _id
         name
       }
-      sprintName: {
+      executionPlanName: {
         _id
         name
       }
@@ -530,7 +544,7 @@ Issue Collection
         _id
         name
       }
-      sprintName: {
+      executionPlanName: {
         _id
         name
       }
@@ -616,7 +630,32 @@ Automation service will include trigger, control and effect properties. Trigger 
 
 ### Notification Service
 
+### Report Service
+Reports will created by different view widgets. All this widgets have filters and different view styles.
+Example widget setting data 
 
+```
+{
+	_id
+	components:[{
+		type: "piechart"
+		locationStart: {x:0,y:0}
+		locationEnd : {x:8, y:8},
+		filters: [{
+			field:"status",
+			control: "eq"
+			value: 1
+		}]
+	},{
+		type: "columnchart"
+		locationStart: {x:8,y:1}
+		locationEnd : {x:11, y:9},
+		
+	}
+	]
+	
+}
+```
 
 ## Technical Notes
 
