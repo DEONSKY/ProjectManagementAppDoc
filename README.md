@@ -5,17 +5,17 @@ Project Management System is a tool that helps working with multiple project man
 
 ## Main Goals
 Project management system should isolate complexity of all project from contributers and employees. It should also provide flexibility. But this flexibility should not risk the simplicity of structure. 
-- Organization users should be managed easily and isolated by teams. Users inherit permission from organization and team. Also they can have custom permission can give by super users. This provides hiding unecessary subjects and tasks from user, also prevents unauthorized creating, update, deletions. And inheritance provides easy general permission changes.
+- Organization users should be managed easily and isolated by teams. Users inherit permission from organization and team. Also they can have custom permission can give by super users. This provides hiding unecessary sections and tasks from user, also prevents unauthorized creating, update, deletions. And inheritance provides easy general permission changes.
 - Roadmap of the project and team responsibilies must be clear. Every teams is associated with execution group. This groups includes execution plans. This plans can be sprint or other types.
-- Complex projects should seperate to multiple simple parts. And this parts can include hierachical parent parts. This parts are subjects. 
-- Documentation is important part of projects. Every subject can include its own embeded documentation file. Users can route between this files by sidebar.
-- Every task is assocaited by a subject. And best practice is every task should be related with a one meaningful subject.
+- Complex projects should seperate to multiple simple parts. And this parts can include hierachical parent parts. This parts are sections. 
+- Documentation is important part of projects. Every section can include its own embeded documentation file. Users can route between this files by sidebar.
+- Every task is assocaited by a section. And best practice is every task should be related with a one meaningful section.
 - Tasks should have dynamic fields. And this dynamic field types are predefined structure with server and frontend logic. This fields can be required or nullable
 - Tasks should have static default fields. Every task will include them.
-- Subjects can include multiple view types. Also this views can be filtered, ordered by fields. Users can select which field will be display or hide
+- Sections can include multiple view types. Also this views can be filtered, ordered by fields. Users can select which field will be display or hide
 - Authorized users can create reports with multiple chart types. Reports can be filtered, ordered by fields. Users can select which fields will be displayed. This part has similarity with views. But reports are only read only.Reports cant manuplate the data. But it can include charts with historical data, which views cannot do. 
 - PMS will be include chat service.
-- Every user can have favorite subjects or tasks for easy access.
+- Every user can have favorite sections or tasks for easy access.
 - PMS will be include notification service
 
 ## Features
@@ -37,19 +37,19 @@ Workspace is the main working environment of an organization. Includes teams, pe
 - avatar_picture [default: random default picture]
 - organization_super_user
 - settings
-- default_member_permissions [organization:gur(hides settings)d, project:gcrud, subject:gcrud, task:gcrud, view:gcrud, report:gcrud, automation:gcrud, execution_plan:gcrud, chat:gcrud, team:gcrud] (g:general_access, c: create, u: update, r: read, d: delete). Also this permissions has static logic groups. If user can update or delete project, at the same time user has a permission automaticly for subject and task update or delete process. Same thing avaible for subject. For read operations this works in reverse. If user read subject, user can display  projects. This permissions can be general or it needs to associatied with subject or project
+- default_member_permissions [organization:gur(hides settings)d, project:gcrud, section:gcrud, task:gcrud, view:gcrud, report:gcrud, automation:gcrud, execution_plan:gcrud, chat:gcrud, team:gcrud] (g:general_access, c: create, u: update, r: read, d: delete). Also this permissions has static logic groups. If user can update or delete project, at the same time user has a permission automaticly for section and task update or delete process. Same thing avaible for section. For read operations this works in reverse. If user read section, user can display  projects. This permissions can be general or it needs to associatied with section or project
 - application_plan [required, default free]
 - last_payment_date [nullable]
 
 ### Workspace Roles
-Workspace roles structure is like wokspace default member permissions.Its function is groups permissions by member roles. Default organization roles are not changeable on workspace roles. Workspace roles can only manage addtional permissions. If a permission is not general workspace account needs to be assoicated with projects or subjects for execute this permissions.
+Workspace roles structure is like wokspace default member permissions.Its function is groups permissions by member roles. Default organization roles are not changeable on workspace roles. Workspace roles can only manage addtional permissions. If a permission is not general workspace account needs to be assoicated with projects or sections for execute this permissions.
 
 - name [required, min:1, max: 48]
 - hex_color [required: min:1 max: 6]
 - permissions
 
 ### Workspace Account
-Every user needs workspace account for join workspace. This account includes role associations, favorites, projects, subject associations and salary.
+Every user needs workspace account for join workspace. This account includes role associations, favorites, projects, section associations and salary.
 
 - permissions
 - salary
@@ -89,7 +89,7 @@ erDiagram
 ```
 settings example: Work in progress limit, 
 
-### Diagram of Organization Service Database (postgresql):
+### Diagram of Organization Service Database (postgresql??):
 
 ```mermaid
 erDiagram 
@@ -133,8 +133,8 @@ WORKSPACE  ||--o{  WORKSPACE_ACCOUNT  : "has employees or contribitors"
  string created_by
  string updated_by
  string deleted_by
- 
  }  
+ 
 WORKSPACE |o--o{  WORKSPACE_ROLES  : "contains custom rules" 
 
 WORKSPACE_ACCOUNT }o--o{  WORKSPACE_ROLES  : "contains custom rules" 
@@ -162,8 +162,10 @@ WORKSPACE_ROLES {
 ```
 
 
-### Project: Organization Projects
-- Name : Name of the project. Every organization-name combination must be uniqeu.    [Min:1 Max:36 Required, unique(organizationId,name)] 
+### Project: Main Project Management Structure
+Project is an independent whole and an integrated state of the main goals with plans. It includes sections, subsections, execution groups, execution plans, tasks, reports, views,
+- Name : Name of the project. Every organization-name combination must be uniqeu.    [Min:1 Max:48 Required, unique(organizationId,name)] 
+- Code: Short project code name without spaces and numbers [Min:1,Max:18, Required]
 - Description: Summary of the project [Min:1,Max:255 Required]
 - Documentation File: Detailed documentation of the project. It will be store project details with a basic CMS service. With using CMS service, user can create complex navigation structure around multiple files and contents. CMS service will create a folder for every project and create pages inside that.
 - Project Settings: Settings of the project. It will store as binary format.
@@ -173,32 +175,34 @@ WORKSPACE_ROLES {
 - Project Responsible : Super user of project. Has all create update and get permissions [Required, default=created_user]
 - Start Date: Project planned start date [Required]
 - Due Date: Project planned end date [Required]
+- TaskLabels[]: Project based custom labels for tasks.
 
-### Sprint: Project Sprints
-- Name: Defined name of sprint [Min:1 Max:36 Required]
-- Project: Project to whichthe project belongs. [Required]
-- Budget: Sprint budget
-- Status: Spirint is activated?
+### ExecutionGroup: Group Of Execution Plan
+- Name: Defined name of execution plan[Min:1 Max:48 Required]
+- Description: Defined name of execution plan[Min:1 Max:48 Required]
+- TotalStoryPoints: total defined story points
+
+### ExecutionPlan: Task execution scheduling
+The execution plan defines which task will be executed between in time interval
+- Name: Defined name of execution plan[Min:1 Max:48 Required]
+- ExecutionGroup: Group of execution plan. [Required]
+- Status: Is activation plan activated?
+- Type: Type of execution plan [Sprint, etc.]
 - Start: Sprint start time. [Required]
 - End: Sprint end time [Required]
+- TotalStoryPoints: total defined story points
 
-### Addtional Customer Requests
-- Title: Title of request [Min:1 Max:36 Required]
-- Description: Summary of the request [Min:1,Max:1023 Required]
-- CreatedBy [Required, default=created_user]
-
-### Subject: Substract parts of project
-- Title: Title of subject [Min:1 Max:36 Required]
-- Description: Summary of the project [Min:1,Max:255 Required]
+### Section: Subtract Task Groups of The Project
+The section describes all task groups created for meet the requirements of the project. It can be a main feature of the project. Or it may be a transactional process that contributes to the project (marketting is an example)
+- Title: Title of section [Min:1 Max:48 Required]
+- Description: Summary of the section[Min:1,Max:255 Required]
+- SectionType: Section types defined inside code as enum [TaskGroup, SectionGroup, Marketing, UserStory]
 - DocumentationFile: Stores id of markdown file document id. Documentation Service is managint this procedure
 - Project: Subject's project [Required]
-- 
-### Subject Dependecy
-- Subject : Subject's itself [Required]
-- DependentSubject: Target subject having dependecy [Required]
-- Depenecy Type: Type of association between subjects (child of, blocker of, part of, refactor of, feature of) [Required]
-- Project: [Required]
-- Custom Fields: Custom Fields of the subject. All them is optional
+- ParentSection: Parent of the section [Required]
+- TaskLabels[]: Section based custom labels for tasks.
+- TaskFields[]: Section based custom fields for tasks. All custom fields can define with keyword this keywords defined inside code
+- Views[]: User defined view structures can created by defined templates inside service logic.
 ```
 custom_fields : {
 	select: [{
@@ -269,26 +273,29 @@ custom_fields : {
 	locations:[{
 		name: string
 	}]
-
 }
 ```
 
-### Issue 
+### Task
+Task the main element of the project. It is the most numerous structure in the system.
 - IssueId
-- Title
-- Despcription (Optional)
+- Name: Name of the task [Required Min:1, Max:48]
+- Description [Required Min:1, Max:255]
 - Documentation Files (Optional)
-- 
+- StoryPoint: Story point is a optional select field [Optional]
+- TimeProgress: TimeProgress is manual progress bar. It stores total minutes. But minutes will be formatted to datetime before show to user. It is alternative of story point
+- Labels: Selected labels form section or project based defined options. It is multiselect type
+- Status: Satatus of the task selected form section or project based defined options. It is select type
+- TaskDependency: 
 
 
-
-|Project | Parent Subject | Subject | Parent Issue | Issue |Child Issues|
+|Project | Parent Section | Section | Parent Issue | Issue |Child Issues|
 |-|-|-|-|-|-|
 Project Management Application | Project Module | View System | View Creation Pages| Kanban View Creation Page | Kanban View Creation Page Design / Input Component Creation / Form Creation        |
 |
 
 Issue Dependecy Types : child of, blocker of,new version of, new feature of , Finish to start (FS), Finish to finish (FF), Start to start (SS), Start to finish (SF)
-Subject Dependecy Types : child of, new version of, next stage of, Finish to start (FS), Finish to finish (FF), Start to start (SS), Start to finish (SF)
+Section Dependecy Types : child of, new version of, next stage of, Finish to start (FS), Finish to finish (FF), Start to start (SS), Start to finish (SF)
 
 
 #### Diagram of Project Service Relational Schema:
@@ -328,18 +335,18 @@ EXECUTION_PLAN {
 	time end
 }
 
-PROJECT ||--o{  SUBJECT : "has"
-SUBJECT ||--o{  VIEWS : "has"
+PROJECT ||--o{  SECTION : "has"
+SECTION ||--o{  VIEWS : "has"
 
-SUBJECT |o--o{ ISSUES:"has"
-EXECUTION_PLAN|o--o{ ISSUES:"has"
+SECTION |o--o{ ISSUES:"has"
+EXECUTION_PLAN }o--o{ ISSUES:"has"
 
 PROJECT ||--o{ EXECUTION_GROUP : ""
 EXECUTION_GROUP ||--o{ EXECUTION_PLAN: ""
 
-SUBJECT ||--o{  SUBJECT : "has child subjects"
+SECTION ||--o{  SECTION : "has child SECTION "
 
-SUBJECT ||--o{  LABELS_OPTIONAL : "has child subjects"
+SECTION ||--o{  LABELS_OPTIONAL : "has child SECTION "
 
 LABELS_OPTIONAL {
 	string name
@@ -363,7 +370,7 @@ ISSUES {
 	Label uint8
 	Status uint8
 	uint8 height 
-	Subject Subject 
+	SECTION SECTION 
 	ProjectID uint64  
 	StatusID uint8 
 	Worklogs jsonb
@@ -393,7 +400,7 @@ ISSUE_DEPENDECY {
 	uint8_ENUM_PK dependencyType
 }
 
-SUBJECT {
+SECTION {
 	ID uint64 
 	Title string 
 	Description string
@@ -486,9 +493,9 @@ project_collection:
       ...execution_plan_fields,
     }
   ],
-  subjects: [
+  sections: [
     {
-      ...subject_fields,
+      ...section_fields,
       dependent_issues: [{
         _id
         name
@@ -503,7 +510,7 @@ project_collection:
         _id
         name
       }]
-      subject : {
+      section : {
         _id
         name
       }
@@ -540,7 +547,7 @@ Issue Collection
 	      id:
 	      name: string,
 	}]
-    subject : {
+    section : {
         _id
         name
       }
@@ -672,13 +679,13 @@ Examples:
 
 - organizationID:0(issue):rwud - organization based global issue permissions
 - organizationID:1(project):rwud - organization based global project permissions
-- organizationID:2(subject):rwud - organization based global subject permissions- 
+- organizationID:2(section):rwud - organization based global section permissions- 
 - organizationID:3(sprint):rwud - organization based global sprint permissions
 - organizationID:4(organization):rwud - organization based global organization permissions
 
 - projectID:0(issue):rwud - project based global issue permissions
 - projectID:1(project):rwud - project based global project permissions
-- projectID:2(subject):rwud - project based global subject permissions
+- projectID:2(section):rwud - project based global section permissions
 - projectID:3(sprint):rwud - project based global sprint permissions
 
 ### Posgres scaling
@@ -698,12 +705,12 @@ When user getting permissions from organization service also get informantion of
 
 ## Chat Service Specs
 - Every project and team has a chat group.
-- Inside this chat groups members create sub channels for subjects or issue. 
+- Inside this chat groups members create sub channels for sections or issue. 
 
 
 ## Documentation Service
 
-Content Service is a service for project, subject or issue documentation.  This service can store markdown files as pages or nested pages. Also this schema
+Content Service is a service for project, section or issue documentation.  This service can store markdown files as pages or nested pages. Also this schema
 
 ### Shema of Content Service Pages (Mongodb)
 documentation_collection example
@@ -761,7 +768,7 @@ Every service and subparts will have their own collection.
 
 ### History Service 
 
-This service is similar with logger service. But it includes less detail and data then user service. And stores data which we want to show users with history pages. Isseues, subjects, sprint and issues have history pages.
+This service is similar with logger service. But it includes less detail and data then user service. And stores data which we want to show users with history pages. Isseues, sections, sprint and issues have history pages.
 
 Example Issue History Collection:
 ```
