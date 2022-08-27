@@ -62,106 +62,6 @@ Workspace accounts can group by teams. Every team has own chat channel. Team Lea
 - members
 
 
-
-### Diagram of User Service Database (postgresql):
-```mermaid
-erDiagram  
-
- TOKEN {
- uint64 id
- string token
- uint64 user_id
- } 
- USER ||--o{ TOKEN : "" 
- USER ||--o{  ORGANIZATION_ACCOUNT  : "can join multiple organization" 
- USER {  
- uint64 id 
- string username
- string name
- string lastname
- string email
- string password
- string avatar_link
- time created_at
- time updated_at
- time deleted_at
- }
-```
-settings example: Work in progress limit, 
-
-### Diagram of Organization Service Database (postgresql??):
-
-```mermaid
-erDiagram 
-WORKSPACE_ACCOUNT 
-
-WORKSPACE_ACCOUNT }o--o{ TEAM : ""
-
-WORKSPACE |o--o{ TEAM : ""
-
-
-
-TEAM {
-uint64 team_id
-byte permissions
-uint64 project_id
-}
-
-PROJECT ||--o{ TEAM : ""
-TEAM ||--|| CHAT_SERVICE_TEAM_CHANNEL: ""
-
-
-
-WORKSPACE_ACCOUNT||--o{ ISSUES : ""
-
-
-WORKSPACE  ||--o{  WORKSPACE_ACCOUNT  : "has employees or contribitors"  
- WORKSPACE  {  
- uint64 id
- uint64 WORKSPACE_shard_id
- string WORKSPACE_name  
- string name 
- string sector  
- uint64 ceo
- uint16 employee_count
- byte settings
- byte default_user_permissions
- time last_payment
- time created_at
- time updated_at
- time deleted_at
- string created_by
- string updated_by
- string deleted_by
- }  
- 
-WORKSPACE |o--o{  WORKSPACE_ROLES  : "contains custom rules" 
-
-WORKSPACE_ACCOUNT }o--o{  WORKSPACE_ROLES  : "contains custom rules" 
-
-
-WORKSPACE_ROLES {
-	uint64 id
-	uint64 WORKSPACE_id
-	string hex_color
-	byte user_permissions
-	time created_at
-	time updated_at
-	time deleted_at
-
-}
- WORKSPACE_ACCOUNT  {  
- uint64_PK user_id  
- uint64_PK WORKSPACE_id  
- byte permissions
- }  
- WORKSPACE ||--o{  PROJECT  : "contains projects"  
- WORKSPACE_ACCOUNT ||--o{  PROJECT  : "has project responseible"  
- USER ||--o{  WORKSPACE_ACCOUNT  : "can join multiple WORKSPACE" 
- CHAT_SERVICE_PROJECT_CHANNEL ||--||  PROJECT  : "has" 
-```
-
-
 ### Project: Main Project Management Structure
 Project is an independent whole and an integrated state of the main goals with plans. It includes sections, subsections, execution groups, execution plans, tasks, reports, views,
 - Name : Name of the project. Every organization-name combination must be uniqeu.    [Min:1 Max:48 Required, unique(organizationId,name)] 
@@ -173,14 +73,16 @@ Project is an independent whole and an integrated state of the main goals with p
 - Automations: User defined automations
 - Organization: Organization to which the project belongs [Required]
 - Project Responsible : Super user of project. Has all create update and get permissions [Required, default=created_user]
+- Budget: Budget of the project [money, Optional]
 - Start Date: Project planned start date [Required]
 - Due Date: Project planned end date [Required]
-- TaskLabels[]: Project based custom labels for tasks.
+- CustomFields[]: Project based custom fields for tasks.
 
 ### ExecutionGroup: Group Of Execution Plan
 - Name: Defined name of execution plan[Min:1 Max:48 Required]
 - Description: Defined name of execution plan[Min:1 Max:48 Required]
-- TotalStoryPoints: total defined story points
+- Budget: Execution budget [manuelProgressCustomFieldType]
+- TotalStoryPoints: total defined story points [Optional]
 
 ### ExecutionPlan: Task execution scheduling
 The execution plan defines which task will be executed between in time interval
@@ -190,19 +92,24 @@ The execution plan defines which task will be executed between in time interval
 - Type: Type of execution plan [Sprint, etc.]
 - Start: Sprint start time. [Required]
 - End: Sprint end time [Required]
-- TotalStoryPoints: total defined story points
+- Budget: Execution budget [manuelProgressCustomFieldType]
+- TotalStoryPoints: total defined story points  [Optional]
 
 ### Section: Subtract Task Groups of The Project
 The section describes all task groups created for meet the requirements of the project. It can be a main feature of the project. Or it may be a transactional process that contributes to the project (marketting is an example)
-- Title: Title of section [Min:1 Max:48 Required]
+- Title: Title of section [Min:1, Max:255 Required]
 - Description: Summary of the section[Min:1,Max:255 Required]
 - SectionType: Section types defined inside code as enum [TaskGroup, SectionGroup, Marketing, UserStory]
 - DocumentationFile: Stores id of markdown file document id. Documentation Service is managint this procedure
 - Project: Subject's project [Required]
+- ColorCode: Sections color code for display [Required]
 - ParentSection: Parent of the section [Required]
-- TaskLabels[]: Section based custom labels for tasks.
 - TaskFields[]: Section based custom fields for tasks. All custom fields can define with keyword this keywords defined inside code
 - Views[]: User defined view structures can created by defined templates inside service logic.
+- SectionDependency: Dependency to another section [Waiting, blocking, related]
+
+### Custom Fields: User Defined Field Values
+Custom fields one of the most important things giving flexibilty the project. User can define extra fields for the task or they can override predefined fields. There are multiple custom field types. This custom field types provided by service logic. User can create section or project based custom fields by this predefined structures. 
 ```
 custom_fields : {
 	select: [{
@@ -277,25 +184,148 @@ custom_fields : {
 ```
 
 ### Task
-Task the main element of the project. It is the most numerous structure in the system.
-- IssueId
-- Name: Name of the task [Required Min:1, Max:48]
-- Description [Required Min:1, Max:255]
+Task the main element of the project. It is the most numerous structure in the system. Also it should include most dynamic features. 
+#### Use Cases
+- If users have permission, they can create tasks with required field
+- Users can select and add addtional custom fields or they can create section or project based custom fields (if they have permission for that) before select custom field.
+- Users can display tasks in multiple views with filters or selected values. Also they can edit this fields by view.
+- Users can display task details inside another screen
+- Task details includes view-edit fields for all task fields. Also it includes notes, worklogs, checklists and history.
+- Multiple permitted users can assign one task and multiple permitted users can be auditor of the task. But for best practices it must be one.
+
+#### Fields
+- TaskId
+- ProjectBasedId
+- Name: Name of the task [Required Min:1, Max:255]
+- Description [Required Min:1, Max:1023]
 - Documentation Files (Optional)
 - StoryPoint: Story point is a optional select field [Optional]
 - TimeProgress: TimeProgress is manual progress bar. It stores total minutes. But minutes will be formatted to datetime before show to user. It is alternative of story point
-- Labels: Selected labels form section or project based defined options. It is multiselect type
-- Status: Satatus of the task selected form section or project based defined options. It is select type
-- TaskDependency: 
+- Labels: Selected labels form section or project based defined options. It is override with multiselect type
+- Status: Status of the task selected form section or project based defined options. It is select type
+- Type: Task type. Is task, issue, epic or event()
+- Priority: Task priority. It is select type
+- TaskDependency: Dependency to another task [waits(b finished after a finished), blocks[b started after a finished], related, duplicate of]
+- ParentTask: Parent task [Optional]
+- ChildTaskCount: If it has child tasks child task count [Optional]
+- Checklist: [Optional]
+- Notes[]: Important notes about task [Optional]
+- Worklog[]: Progression by story points or spending time with description
+- Auditors[]: Auditors of the task [nullable]
+- Assignies[]: Assignies of the task [nullable]
+- Helpers[]: Helpers help assignees. In real life example, this corresponds to the senior assisting the junior. Senior can log this work as a helper.
+- DueDate: 
+- CreatedAt
+- CreatedBy
+- UpdatedAt
+- UpdatedBy
+- DeletedAt
+- DeletedBy
+- ...CustomFields [Optional]
 
-
-|Project | Parent Section | Section | Parent Issue | Issue |Child Issues|
+#### Example Hierarchy
+|Project | Parent Section | Section | Parent Task| Issue |Child Task|
 |-|-|-|-|-|-|
 Project Management Application | Project Module | View System | View Creation Pages| Kanban View Creation Page | Kanban View Creation Page Design / Input Component Creation / Form Creation        |
 |
 
-Issue Dependecy Types : child of, blocker of,new version of, new feature of , Finish to start (FS), Finish to finish (FF), Start to start (SS), Start to finish (SF)
-Section Dependecy Types : child of, new version of, next stage of, Finish to start (FS), Finish to finish (FF), Start to start (SS), Start to finish (SF)
+
+### Diagram of User Service Database (postgresql):
+```mermaid
+erDiagram  
+
+ TOKEN {
+ uint64 id
+ string token
+ uint64 user_id
+ } 
+ USER ||--o{ TOKEN : "" 
+ USER ||--o{  ORGANIZATION_ACCOUNT  : "can join multiple organization" 
+ USER {  
+ uint64 id 
+ string username
+ string name
+ string lastname
+ string email
+ string password
+ string avatar_link
+ time created_at
+ time updated_at
+ time deleted_at
+ }
+```
+
+### Diagram of Organization Service Database (postgresql??):
+
+```mermaid
+erDiagram 
+WORKSPACE_ACCOUNT 
+
+WORKSPACE_ACCOUNT }o--o{ TEAM : ""
+
+WORKSPACE |o--o{ TEAM : ""
+
+
+
+TEAM {
+uint64 team_id
+byte permissions
+uint64 project_id
+}
+
+PROJECT ||--o{ TEAM : ""
+TEAM ||--|| CHAT_SERVICE_TEAM_CHANNEL: ""
+
+
+
+WORKSPACE_ACCOUNT||--o{ TASKS : ""
+
+
+WORKSPACE  ||--o{  WORKSPACE_ACCOUNT  : "has employees or contribitors"  
+ WORKSPACE  {  
+ uint64 id
+ uint64 WORKSPACE_shard_id
+ string WORKSPACE_name  
+ string name 
+ string sector  
+ uint64 ceo
+ uint16 employee_count
+ byte settings
+ byte default_user_permissions
+ time last_payment
+ time created_at
+ time updated_at
+ time deleted_at
+ string created_by
+ string updated_by
+ string deleted_by
+ }  
+ 
+WORKSPACE |o--o{  WORKSPACE_ROLES  : "contains custom rules" 
+
+WORKSPACE_ACCOUNT }o--o{  WORKSPACE_ROLES  : "contains custom rules" 
+
+
+WORKSPACE_ROLES {
+	uint64 id
+	uint64 WORKSPACE_id
+	string hex_color
+	byte user_permissions
+	time created_at
+	time updated_at
+	time deleted_at
+
+}
+ WORKSPACE_ACCOUNT  {  
+ uint64_PK user_id  
+ uint64_PK WORKSPACE_id  
+ byte permissions
+ }  
+ WORKSPACE ||--o{  PROJECT  : "contains projects"  
+ WORKSPACE_ACCOUNT ||--o{  PROJECT  : "has project responseible"  
+ USER ||--o{  WORKSPACE_ACCOUNT  : "can join multiple WORKSPACE" 
+ CHAT_SERVICE_PROJECT_CHANNEL ||--||  PROJECT  : "has" 
+```
 
 
 #### Diagram of Project Service Relational Schema:
@@ -304,14 +334,14 @@ erDiagram
  PROJECT {
 	uint64 id
 	string name
-	sting description
+	string description
+	string code
 	string documentation_file_id
 	byte settings
-	jsonb views
-	jsonb automations
+	jsonb_arr views
+	jsonb_arr automations
 	uint64 organization_id
 	uint64 project_responsible_id
-	string scope_rules
 	money budget
 	time start_date
 	time due_date
@@ -319,18 +349,52 @@ erDiagram
 	time updated_at
 	tiem deleted_at
  }
+PROJECT_CUSTOM_FIELDS {
+	id id
+	string name
+	string hexcode
+}
+SECTION_CUSTOM_FIELDS {
+	id id
+	string name
+	string hexcode
+}
+
+SECTION_DEPENDENCY {
+	id section 
+	id dependent_section
+	int dependency_type
+}
+
+SECTION ||--o{  SECTION_DEPENDENCY : "has section"
+SECTION ||--o{  SECTION_DEPENDENCY : "has dependent section"
+
+PROJECT ||--o{  PROJECT_CUSTOM_FIELDS : "has custom fields"
+SECTION ||--o{  SECTION_CUSTOM_FIELDS : "has custom fields"
+
 ORGANIZATOIN ||--o{  PROJECT: "has"
-ORGANIZATION_ACCOUNT }|--o|  PROJECT: "project responsible" 
+ORGANIZATION_ACCOUNT }|--o{  PROJECT: "project responsible" 
 CONTENT_SERVICE||--||  PROJECT: "documentation file" 
 HISTORY_SERVICE||--||  PROJECT: "project change history" 
+ARCHIVE_SERVICE ||--|| PROJECT : "project can be archived"
+
+EXECUTION_GROUP {
+	int id
+	int name
+	string description
+	int totol_story_points
+	money group_budget
+	int project_id
+}
 
 EXECUTION_PLAN {
 	uint64 id
 	uint64 name
+	int execution_group_id
 	uint64 project_id
 	money budget
 	uint8 status
-	uint8 sprint_queue_number
+	int total_story_points_optional
 	time start
 	time end
 }
@@ -338,62 +402,53 @@ EXECUTION_PLAN {
 PROJECT ||--o{  SECTION : "has"
 SECTION ||--o{  VIEWS : "has"
 
-SECTION |o--o{ ISSUES:"has"
-EXECUTION_PLAN }o--o{ ISSUES:"has"
+SECTION |o--o{ TASKS:"has"
+EXECUTION_PLAN }o--o{ TASKS:"has"
 
 PROJECT ||--o{ EXECUTION_GROUP : ""
 EXECUTION_GROUP ||--o{ EXECUTION_PLAN: ""
 
-SECTION ||--o{  SECTION : "has child SECTION "
+SECTION |o--o{  SECTION : "has child SECTION "
 
-SECTION ||--o{  LABELS_OPTIONAL : "has child SECTION "
 
-LABELS_OPTIONAL {
-	string name
-	string colorHex
-	
-}
 
-ISSUES ||--o{  NOTES: ""
-ISSUES ||--o{  NOTES: ""
-ISSUES ||--||  ISSUE_CHAT_SERVICE: ""
+TASKS||--o{  NOTES: ""
+TASKS||--o{  NOTES: ""
+TASKS||--||  ISSUE_CHAT_SERVICE: ""
 
-ISSUES {
+TASKS{
 	ID uint64  
-	Title string  
-	Description string  
-	IssueForeignId string  
-	TargetTime uint32  
-	SpendingTime uint32  
-	Progress uint8  
-	Impact uint8
-	Label uint8
-	Status uint8
-	uint8 height 
+	project_based_id int
+	name string  
+	Description string 
+	DocumentationFiles int_arr 
+	StoryPoint int
+	TimeProgress manuel_progress_bar_int
+	Progress automaticProgressBar_int
+	Labels multiselect_int
+	Status select_int
+	Type select_int
 	SECTION SECTION 
 	ProjectID uint64  
-	StatusID uint8 
 	Worklogs jsonb
 	Notes jsonb
 	Checklist jsonb
-	DependentIssues Issue 
-	ReporterID uint64 
-	Reporter User 
-	AssignieID uint64  
-	Assignie User 
+	TaskDependency Task
+	Auditors uint64_arr  
+	Assignies User 
 	DueDate time
 	CreatedAt timeTime 
 	UpdatedAt timeime 
 	DeletedAt gormDeletedAt 
 }
 
-ISSUES ||--o{ WORKLOG : ""
+TASKS||--o{ WORKLOG : ""
 
-ISSUES ||--o{ CHECKLIST: ""
+TASKS||--o{ CHECKLIST: ""
 
 
-ISSUES ||--o{  ISSUE_DEPENDECY : "has issues"
-ISSUES ||--o{  ISSUE_DEPENDECY : "has dependent issues"
+TASKS||--o{  ISSUE_DEPENDECY : "has TASKS"
+TASKS||--o{  ISSUE_DEPENDECY : "has dependent TASKS"
 ISSUE_DEPENDECY {
 	uint64_PK issue
 	uint64_PK dependentIssue
@@ -404,17 +459,22 @@ SECTION {
 	ID uint64 
 	Title string 
 	Description string
+	string section_group 
 	string documentation_file_id
 	ProjectID uint64  
-	color st
+	ParentSection Section
+	color string
 	Project Project 
-	Issues Issue 
+	TaskFieldsArr arr
+	DependencyArr arr
+	ViewsArr arr
 	CreatedAt timeTime 
 	UpdatedAt timeTime 
 	DeletedAt gormDeletedAt 
 }
 
-TEAM_MEMBERS ||--o{ ISSUES : ""
+WORKSPACE_ACCOUNT ||--o{ TASKS: ""
+TASKS|o--o{ TASKS: ""
 
 WORKLOG {
 	uint64 id
@@ -482,49 +542,62 @@ CHECKLIST{
 ```
 
 
-### Project schema example (mongodb version)
+### Project schemas example (mongodb version)
 ```
 project_collection:
-
 {
   ...project_fields
-  executıon_plans: [
-    {
-      ...execution_plan_fields,
-    }
-  ],
-  sections: [
-    {
-      ...section_fields,
-      dependent_issues: [{
-        _id
-        name
-      }]
-    }
-  ],
-  issues: [
-    {
-      _id
-      ...issue_fields,
-      dependent_issues: [{
-        _id
-        name
-      }]
-      section : {
-        _id
-        name
-      }
-      executionPlanName: {
-        _id
-        name
-      }
-    },
-	  worklog : [{}]
-	  notes: [{}]
-	  checklist: [{}]
-	  history: []
- 
+  project_custom_fields=[]
+}
 ```
+
+```
+execution_collection:
+{
+	...execution_group_fields
+}
+```
+
+```
+execution_plan:
+{
+	...execution_plan
+	tasks[
+	  _id
+	  name
+	]
+}
+```
+
+```
+section:
+{
+	...section
+	section_custom_fields:[]
+	section_dependencies[
+		_id
+		dependent_section
+		type
+	]
+	views:[]
+}
+```
+
+```
+tasks:
+{
+	...tasks
+	notes:[]
+	worklogs:[]
+	checklists:[]
+	task_dependencies[
+		_id
+		dependent_task
+		type
+	]
+}
+```
+
 Issue Collection
 ```
  issues: [
@@ -636,6 +709,7 @@ Automation service will include trigger, control and effect properties. Trigger 
 ```
 
 ### Notification Service
+Notification Service 
 
 ### Report Service
 Reports will created by different view widgets. All this widgets have filters and different view styles.
@@ -706,7 +780,7 @@ When user getting permissions from organization service also get informantion of
 ## Chat Service Specs
 - Every project and team has a chat group.
 - Inside this chat groups members create sub channels for sections or issue. 
-
+- Chat service includes spending time feature for users. Chat service estimates the time devoted to writing and reading.
 
 ## Documentation Service
 
@@ -768,7 +842,7 @@ Every service and subparts will have their own collection.
 
 ### History Service 
 
-This service is similar with logger service. But it includes less detail and data then user service. And stores data which we want to show users with history pages. Isseues, sections, sprint and issues have history pages.
+This service is similar with logger service. But it includes less detail and data than user service. And stores data which we want to show users with history pages. Isseues, sections, sprint and issues have history pages.
 
 Example Issue History Collection:
 ```
@@ -779,3 +853,6 @@ Example Issue History Collection:
   date
 }
 ```
+
+### Archive Service 
+Archive service includes clone datas of project service. This service is not editable.
