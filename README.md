@@ -37,7 +37,7 @@ Workspace is the main working environment of an organization. Includes teams, pe
 - avatar_picture [default: random default picture]
 - organization_super_user
 - settings
-- default_member_permissions [organization:gur(hides settings)d, project:gcrud, section:gcrud, task:gcrud, view:gcrud, report:gcrud, automation:gcrud, execution_plan:gcrud, chat:gcrud, team:gcrud] (g:general_access, c: create, u: update, r: read, d: delete). Also this permissions has static logic groups. If user can update or delete project, at the same time user has a permission automaticly for section and task update or delete process. Same thing avaible for section. For read operations this works in reverse. If user read section, user can display  projects. This permissions can be general or it needs to associatied with section or project
+- default_member_permissions [organization:gtur(hides settings)d, project:gtcrud, section:gtcrud, task:gtcrud, view:gtcrud, report:gtcrud, automation:gtcrud, execution_plan:gtcrud, chat:gtcrud, team:gtcrud] (g:general_access, t:team_access, c: create, u: update, r: read, d: delete). Also this permissions has static logic groups. If user can update or delete project, at the same time user has a permission automaticly for section and task update or delete process. Same thing avaible for section. For read operations this works in reverse. If user read section, user can display  projects. This permissions can be general or it needs to associatied with section or project
 - application_plan [required, default free]
 - last_payment_date [nullable]
 
@@ -100,6 +100,7 @@ The section describes all task groups created for meet the requirements of the p
 - Title: Title of section [Min:1, Max:255 Required]
 - Description: Summary of the section[Min:1,Max:255 Required]
 - SectionType: Section types defined inside code as enum [TaskGroup, SectionGroup, Marketing, UserStory]
+- SectionRoleRequirements[]:  Describes which role required for executing task.
 - DocumentationFile: Stores id of markdown file document id. Documentation Service is managint this procedure
 - Project: Subject's project [Required]
 - ColorCode: Sections color code for display [Required]
@@ -201,6 +202,7 @@ Task the main element of the project. It is the most numerous structure in the s
 - Documentation Files (Optional)
 - StoryPoint: Story point is a optional select field [Optional]
 - TimeProgress: TimeProgress is manual progress bar. It stores total minutes. But minutes will be formatted to datetime before show to user. It is alternative of story point
+- TaskRoleRequirements[]:  Describes which role required for executing task.
 - Labels: Selected labels form section or project based defined options. It is override with multiselect type
 - Status: Status of the task selected form section or project based defined options. It is select type
 - Type: Task type. Is task, issue, epic or event()
@@ -214,6 +216,8 @@ Task the main element of the project. It is the most numerous structure in the s
 - Auditors[]: Auditors of the task [nullable]
 - Assignies[]: Assignies of the task [nullable]
 - Helpers[]: Helpers help assignees. In real life example, this corresponds to the senior assisting the junior. Senior can log this work as a helper.
+- TaskStartDate: Describes start date of the task. It is independent from estimated time at the time progress.
+- TaskEndDate:Describes end date of the task. It is independent from estimated time at the time progress.
 - DueDate: 
 - CreatedAt
 - CreatedBy
@@ -229,8 +233,68 @@ Task the main element of the project. It is the most numerous structure in the s
 Project Management Application | Project Module | View System | View Creation Pages| Kanban View Creation Page | Kanban View Creation Page Design / Input Component Creation / Form Creation        |
 |
 
+## Pages And Components
 
-### Diagram of User Service Database (postgresql):
+### Register Page:
+This screen is classical register screen. It needs username, name, lastname, email,  optinal avatar and password field. Password should be confirmed before with another field before submit.
+
+### Login Page:
+This screen is classical login screen. It wants username or email and password. After that it redirects home page.
+
+### Home Page:
+Homepage includes user's last actions. It includes daily calendar for assigned or audit tasks with a switch. Also users can navigate they organization based custom views. Users can create 5 custom views for home page that can be organization based . Or users can select this views from public views of the project or subject
+
+### Dashboard Page:
+ Dashboards are customizable statistical views composed of multiple charts. Charts has filters. Permitted users can create reports by dragging and dropping charts, and setting filters. Also, they can allocate these charts inside of 12 piece width layout.
+Those reports can be limited by project, section, execution plan or execution group data rather than organization data. User can access this dashboards from sidenav's dashboard dropdown. Permitted users can archive this dashboards or export as pdf.
+
+### Sidenav Component And Redirection Hierarchy:
+Sidenav is the main navigation of the project and includes important searching and routing elements.
+Now I will list these elements:
+- Search:   Everything in the organization can be searched from this section.
+- Home: Routes Home Page
+- Favorites: Includes users favorite dashboards, sections, tasks inside one folder
+- Projects: Includes project based hierachical display as navtree. Users are guided to the leaves of section tree. Also this structure provides users to navigate dashboards and documents. Inside every row shows document and dashboard count with screen link, inside small buttons. If section access inherited from a team, this team will display inside this row.
+- Dashboards: Dashboard dropdown includes user's private dashboards inside one dropdown. This dropdown has not hierarchical structure. But shared dashboards with user has hierarchical structure. It's similar to the projects hierarchy, but its only includes dashboards in this nav tree.
+- Documents: Document navigation structure is similar to dashboard dropdown.
+- Workspace: At the bottom, sidenav includes workspace selection and settings menu. 
+- User: At the bottom, sidenav includes user settings menu. 
+
+### Settings Page:
+Settings page includes active workspace settings and user settings.
+#### Workspace Settings:
+- Update organization name
+- Simple Permission Mode: Complex permissions may not be suitable for small companies. For this reason if this mode on, it only allows admin and member roles. This roles are general, not relational about specific project, section,etc.
+- Mid Permission Mode: This mode enables custom roles. Also this roles can be project structure specific or team based.
+- Complex Permission Mode: Every user can specific permission. 
+- Member Management: Screen for inviting people and showing members in list format. Also in this screen permitted users can create custom roles, and give users to custom permissions
+- //General Permissions: Screen for editing general permissions inside workspace
+- Team Management: Screen for team management and team permissions. This screen has modals for team creation (Naming team, member selection,related project-section selection)
+- Plan Management and Billing:
+- Trash: Last deleted workspace elements in 30 days (after that they are permanently deleted).
+#### User Settings
+- Account Settings: (avatar, fullname, email, password)
+- Color Theme Setting
+- Language Setting
+- Auditor Settings
+
+### Project Page:
+Project Page includes all tasks of the projects in this screen. Default and project based fields can be display, group sort and filtered here. Users can navigate to documentations or dashboards from header navigation. Users can select default view from options for project (Saves inside project data for fast access). If parse by section option selected every tasks will gruop by leaf section in supporting views
+
+### Header Nav:
+User can change view type or navigate documentation,dashboard pages inside this navigation. Also users can add new views with button inside this navigation. Also user can acces project or section settings from this nav. Custom fields, automations etc.
+
+### Pocket Component:
+Users can add tasks, documents and dashboards to pocket for easy access. 
+
+### Section Page:
+Looks like project but prefilters by section.
+
+### Execution Page
+Looks like project but prefilters by execution plan or group.
+
+
+### Diagram of User Service Database (postgresql??):
 ```mermaid
 erDiagram  
 
@@ -255,7 +319,7 @@ erDiagram
  }
 ```
 
-### Diagram of Organization Service Database (postgresql??):
+### Diagram of Organization Relational Schema (postgresql??):
 
 ```mermaid
 erDiagram 
@@ -856,3 +920,5 @@ Example Issue History Collection:
 
 ### Archive Service 
 Archive service includes clone datas of project service. This service is not editable.
+
+If you just have modified your file and you want to force syncing, click the **Synchronize now** button in the navigation bar.
