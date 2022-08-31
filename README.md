@@ -293,6 +293,23 @@ Looks like project but prefilters by section.
 ### Execution Page
 Looks like project but prefilters by execution plan or group.
 
+### Task Detail - Update Page 
+On the task detail page, users can display fields of the task and they can edit if they have permission. This page displays in modal format and has three main parts. And user can navigate between this three parts
+- Explanation:Left side of the page includes Task Name,notes button, description, documentation file link (opens documentation popup), subtasks, dependent tasks from top to bottom
+
+### Task Creation Page
+Task creation page can open from sidebars related sections dropdown options. Title, descripiton, documentation, subtasks, assignie can added.
+
+### Views:
+Views can contain selected custom fields.  And it has one optional by parameter, but it has multiple chained(and,or) or unchained filters. Also includes multiple sorting parameters. It includes easy "my tasks" filter. Bu this filter section can iclude view specific options.  It has task search.
+#### List View:
+List view sorting can managed by list header. Every row includes its standart task info column. If the user is permitted every column is editable. Includes shorcuts for for addtional columns or new tasks. Lists can group by selected parameters.
+#### Kanban View:
+Kanban View sort can managed by general view header. Every kanban box includes standart task info and selected custom fields of task.
+#### Roadmap View:
+Roadmap view includes task sections and timeline sections. Users can drag and drop tasks from task section to timeline or timeline to task section. This feature can only usable for root parent tasks. Olsa roadmat supports nested sections.
+
+
 
 ### Diagram of User Service Database (postgresql??):
 ```mermaid
@@ -920,5 +937,3 @@ Example Issue History Collection:
 
 ### Archive Service 
 Archive service includes clone datas of project service. This service is not editable.
-
-If you just have modified your file and you want to force syncing, click the **Synchronize now** button in the navigation bar.
