@@ -2,6 +2,12 @@
 
 Project Management System is a tool that helps working with multiple project management methodologies. 
 
+## Screen Designs
+https://www.figma.com/file/YIhfMQM4mA2Lji5fguLzQm/NonEx-IntegratedTaskManagement?node-id=380%3A129
+
+## Microservice High Level Design 
+https://drive.google.com/file/d/1RwU5d8xTOaOcD4QBwGgX9Y6GRsTC89jW/view?usp=sharing
+
 
 ## Main Goals
 Project management system should isolate complexity of all project from contributers and employees. It should also provide flexibility. But this flexibility should not risk the simplicity of structure. 
@@ -37,7 +43,6 @@ Workspace is the main working environment of an organization. Includes teams, pe
 - avatar_picture [default: random default picture]
 - organization_super_user
 - settings
-- default_member_permissions [organization:gtur(hides settings)d, project:gtcrud, section:gtcrud, task:gtcrud, view:gtcrud, report:gtcrud, automation:gtcrud, execution_plan:gtcrud, chat:gtcrud, team:gtcrud] (g:general_access, t:team_access, c: create, u: update, r: read, d: delete). Also this permissions has static logic groups. If user can update or delete project, at the same time user has a permission automaticly for section and task update or delete process. Same thing avaible for section. For read operations this works in reverse. If user read section, user can display  projects. This permissions can be general or it needs to associatied with section or project
 - application_plan [required, default free]
 - last_payment_date [nullable]
 
@@ -46,7 +51,7 @@ Workspace roles structure is like wokspace default member permissions.Its functi
 
 - name [required, min:1, max: 48]
 - hex_color [required: min:1 max: 6]
-- permissions
+- permissions[]
 
 ### Workspace Account
 Every user needs workspace account for join workspace. This account includes role associations, favorites, projects, section associations and salary.
@@ -99,7 +104,7 @@ The execution plan defines which task will be executed between in time interval
 The section describes all task groups created for meet the requirements of the project. It can be a main feature of the project. Or it may be a transactional process that contributes to the project (marketting is an example)
 - Title: Title of section [Min:1, Max:255 Required]
 - Description: Summary of the section[Min:1,Max:255 Required]
-- SectionType: Section types defined inside code as enum [TaskGroup, SectionGroup, Marketing, UserStory]
+- SectionLabel: Section labels categorize sections [TaskGroup, SectionGroup, Marketing, UserStory]
 - SectionRoleRequirements[]:  Describes which role required for executing task.
 - DocumentationFile: Stores id of markdown file document id. Documentation Service is managint this procedure
 - Project: Subject's project [Required]
@@ -180,12 +185,14 @@ custom_fields : {
 	}]
 	locations:[{
 		name: string
-	}]
+	}],
+	...3rdPartyImplementationDataTypes
 }
 ```
 
 ### Task
 Task the main element of the project. It is the most numerous structure in the system. Also it should include most dynamic features. 
+
 #### Use Cases
 - If users have permission, they can create tasks with required field
 - Users can select and add addtional custom fields or they can create section or project based custom fields (if they have permission for that) before select custom field.
@@ -254,6 +261,9 @@ Now I will list these elements:
 - Search:   Everything in the organization can be searched from this section.
 - Home: Routes Home Page
 - Favorites: Includes users favorite dashboards, sections, tasks inside one folder
+- Teams: Teams includes executions groups, sections, meetings, dashboards and documents group by teams 
+- Meetings: Meetings gruops all meetings inside projects
+- Execution Groups: Shows execution group, execution plan structure
 - Projects: Includes project based hierachical display as navtree. Users are guided to the leaves of section tree. Also this structure provides users to navigate dashboards and documents. Inside every row shows document and dashboard count with screen link, inside small buttons. If section access inherited from a team, this team will display inside this row.
 - Dashboards: Dashboard dropdown includes user's private dashboards inside one dropdown. This dropdown has not hierarchical structure. But shared dashboards with user has hierarchical structure. It's similar to the projects hierarchy, but its only includes dashboards in this nav tree.
 - Documents: Document navigation structure is similar to dashboard dropdown.
@@ -279,7 +289,7 @@ Settings page includes active workspace settings and user settings.
 - Auditor Settings
 
 ### Project Page:
-Project Page includes all tasks of the projects in this screen. Default and project based fields can be display, group sort and filtered here. Users can navigate to documentations or dashboards from header navigation. Users can select default view from options for project (Saves inside project data for fast access). If parse by section option selected every tasks will gruop by leaf section in supporting views
+Project Page includes all tasks of the projects in this screen. Default and project based fields can be display, group sort and filtered here. Users can navigate to documentations or dashboards from header navigation. Users can select default view from options for project (Saves inside project data for fast access). If parse by section option selected every tasks will gruop by leaf section in supporting views. Views, Documents, Dashboards, Meetings view options: Include only own leaf elements (task, meeting, dashboard or documents). Include all child leaf elements group by main roots. Include all child leaf elements group by leaf roots
 
 ### Header Nav:
 User can change view type or navigate documentation,dashboard pages inside this navigation. Also users can add new views with button inside this navigation. Also user can acces project or section settings from this nav. Custom fields, automations etc.
@@ -308,6 +318,10 @@ List view sorting can managed by list header. Every row includes its standart ta
 Kanban View sort can managed by general view header. Every kanban box includes standart task info and selected custom fields of task.
 #### Roadmap View:
 Roadmap view includes task sections and timeline sections. Users can drag and drop tasks from task section to timeline or timeline to task section. This feature can only usable for root parent tasks. Olsa roadmat supports nested sections.
+
+
+### Meetings:
+Each project has a certain amount of time spent communicating. Tasks, sections, sprints projects and organization can have meetings. Task meeting do not increase task estimated time but for other project elements meetings added to the total time
 
 
 
@@ -350,7 +364,12 @@ WORKSPACE |o--o{ TEAM : ""
 
 TEAM {
 uint64 team_id
-byte permissions
+string team_name
+string teamColorHex
+id_array sections
+id_array projects
+id_array documents
+
 uint64 project_id
 }
 
@@ -718,7 +737,7 @@ Issue Collection
 ```
 
 ### View Slot System (Kanban, Gantt vs)
-Every view has an predifined slot structures inside code. And user can define which parameters will be part of this structure. With an frontend interface user can design which parameters show where. Service will control this definations match with schema limitations, and save this structure as json format inside view structure. All keys are reserved and validated keywords.
+Every view has an predifined slot structures inside code. And user can define which parameters will be part of this structure. With an frontend interface user can design which parameters show where. Service will control this definations match with schem  limitations, and save this structure as json format inside view structure. All keys are reserved and validated keywords.
 
 #### Example View Format :
 ```
@@ -739,28 +758,12 @@ Every view has an predifined slot structures inside code. And user can define wh
 		project_issue_id
 		issue_name
 	]
-	upright_corner: [
-		assinie_image: url
-		assignie_name
-	],
-	bottomright_corner : [
-		due_date: 
-		
-	],
-	bottomeleft_corner : [
-	
-	],
-	line_percentage: {
-		(total_checkount)
-		(checked_check_count)
-	}
-	description_paper:{
-		title : [
-			project_issue_id
-			issue_name,
-		]
-
-	}
+	custom_fields: [
+		{
+			type:"user"
+			data:{user_data_format}
+		}
+	]
 }
 ```
 #### Example List View Format
@@ -822,6 +825,8 @@ Example widget setting data
 ## Technical Notes
 
 ### User Permission System
+
+When a User created any element automaticly becomes owner of this element and has all permissions for this element. But owner paramenter can changed by other permitted users.
 
 When user logged in, user will get organization permissions from ORGANIZATION_ACCOUNT table and team permissions from TEAM_MEMBER table for  token. Also user will get defaut role permissions from TEAM_MEMBER_ROLE table
 ORGANIZATION_ACCOUNT permissions.
