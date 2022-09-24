@@ -24,6 +24,111 @@ Project management system should isolate complexity of all project from contribu
 - Every user can have favorite sections or tasks for easy access.
 - PMS will be include notification service
 
+## Project Philosophy and Core Structure (DPECA)
+
+workspace contains all elements. 
+* Desing (target)
+	- project
+	- section
+	- task
+	- document
+	- attachments 
+* Plan (target + time)
+	- Execution groups
+	- Execution plans
+* Execute - Communicate (target + time + human)
+	- team
+	- chat service
+	- worklog
+	- notes
+	- history
+* Analyse (target + time + human + progression)
+	- reports
+	- views,
+	- dashbaords
+
+## Section Structure of the Project
+
+* Features
+	- User
+		- Register
+			- -Register Service
+			- Email verficiation
+				- -Email verfication screen (web)
+				- -Unlock account service
+			- -Register Screen (web)
+		- Login
+			- User Login Service
+			- User Login Screen
+		- -Two Factor Authentication (Not designed yet)
+		- -Password change
+			- Password Change Component (web)
+			- Password Change Service
+		- -Add Profile Picture
+	- Audit
+		- User Audit Notification Settings
+			- Settings Edit Component (web)
+			- User Enable Notification Service
+			- User Notifications Filter Middleware
+			- Kafka notifications subscribe model
+		- Audit Task
+			- Audit Task Service
+			- Audit Task Component
+	- Workspace 
+		- Workspace Creation
+			- Workspace create service
+			- Workspace create form component(web)
+		- Workspace Deletion
+			- Workspace delete service
+			- Workspace delete frontend implementation (web)
+		- Settings
+			- Organization Name Change
+				- Organization Name Update Service
+				- Oganization Name Update Component (web)
+			- Permission
+				- Permission Mode Change Service
+				- Permission Mode Change Component (web)
+		- Plan And Billing (not designed yet)
+		- Member Management
+			- Get members for list service
+			- Workspace members component (web)
+			- Manage Member Role component (web)
+			- Manage Member Non-Standart Permissions component (web)
+			- Manage Member Non-Standart Permissions service
+			- Manage Member Assigned Sections component(web)
+			- Manage Member Assigned Sections service
+					
+		
+* Frontend Specific (web) 	
+	- Monolith Frontend Service 
+		- components
+			- Inputs
+				- TextInput
+				- TextAreaInput
+				- SelectInput
+				- MultiselectInput
+				- ImageSelection
+				- CheckboxInput (Toggle Switch)
+				- SwitchInput
+		- pages
+			- Settings Pages
+				- Settings Layout And Navigation
+				- -User Settings Page
+				- -User Notifications Page
+		- configrations
+			- docker file creation
+
+
+* Backend Specific
+	- User Microservice
+		- Request Validation Structure
+		- Database Connection
+		- docketfile creation
+	- Notification Microservice
+		- Kafka Implentation and Configration
+
+* Pipeline Specific
+
 ## Features
 ### Account
 
@@ -115,7 +220,9 @@ The section describes all task groups created for meet the requirements of the p
 - SectionDependency: Dependency to another section [Waiting, blocking, related]
 
 ### Custom Fields: User Defined Field Values
-Custom fields one of the most important things giving flexibilty the project. User can define extra fields for the task or they can override predefined fields. There are multiple custom field types. This custom field types provided by service logic. User can create section or project based custom fields by this predefined structures. 
+Custom fields one of the most important things giving flexibilty the project. User can define extra fields for the task or they can override predefined fields. There are multiple custom field types. This custom field types provided by service logic. User can create section or project based custom fields by this predefined structures.  
+If user wants to create custom field all parent element fields will be displayed to user.  This will prevent recreating previously created usable custom fields.
+
 ```
 custom_fields : {
 	select: [{
@@ -148,6 +255,10 @@ custom_fields : {
 		]
 	}],
 	calculation :[
+		{
+			method:"sum",
+			parameters=
+		}
 		(not designed)
 	],
 	member: [{
