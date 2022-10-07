@@ -73,6 +73,8 @@ workspace contains all elements.
 			- Kafka notifications subscribe model
 		- Audit Task
 			- Audit Task Service
+			- Audit Section Service
+			- Audit Project Service
 			- Audit Task Component
 	- Workspace 
 		- Workspace Creation
@@ -91,17 +93,220 @@ workspace contains all elements.
 		- Plan And Billing (not designed yet)
 		- Member Management
 			- Get members for list service
+			- Get members for select service
+			- Member Select component(web)(blocking start-> Role Management/Assignie Role To User implementation)
 			- Workspace members component (web)
 			- Manage Member Role component (web)
 			- Manage Member Non-Standart Permissions component (web)
 			- Manage Member Non-Standart Permissions service
 			- Manage Member Assigned Sections component(web)
 			- Manage Member Assigned Sections service
-					
+			- Get User Profile service
+			- Get User Profile component (web)
+		- Team Management 
+			- Get Teams as list service  
+			- Teams List Component (web)
+			- Get Team's team members service 
+			- Team Member List component (web)
+			- Team Member List service 
+			- Remove User From Team Service
+			- List team's sections service
+			- List team's projects service
+			- Teams Projects-Sections Edit-View component (web)
+			- List Team's Execution Groups Service
+			- List Team's Execution Plans Service
+			- Team's Execution Plans-Groups Edit-View component (web)
+			- Team Delete Service
+			- Team Stats Report (Team Leader and Permitted users)
+			- 
+		- Role Management
+			- List organization roles with service
+			- List organization roles for select service
+			- Organization Roles List component(web)
+			- Organization Roles Select component(web) 
+			- Create Role With Permissions service
+			- Update Role With Permissions Component
+			- Create-Update Role With Permissions component(web)
+			- Delete Role Service
+			- Assignie Role To User Service			
+			- Assignie Role To User implementation (web)(depends finish to start->Member Management/Member Select component )		
+		- Trash 
+			- List trashbin elements service
+			- Trashbin List component(web)
+			- Restore trash service
+			- Perma delete now service
+			- Add to trash service
+	- Project 
+		- Create Project Service 
+		- Update Project Service
+		- Create-Update Project Component (web)
+		- Delete Project Service
+		- Edit Project Custom Fields Service
+		- Create View Implementation (web)
+		- Create Dashbaord Implementation (web)
+		- Create Document Implementation (web)
+		- Create Execution Plan Implementation (web)
+		- Create Execution Group Implementation (web)
+		- Attach File Implementation
+		- Create Section Implementation
+	-  Section 
+		- Create Section Service
+		- Update Section Service
+		- Create - Update Section Component (web)
+		- Delete Section Service
+		-  Edit Project Custom Fields Service
+		- Create View Implementation (web)
+		- Create Dashbaord Implementation (web)
+		- Create Document Implementation (web)
+		- Attach File Implementation
+		- Create Section Implementation
+	- Task 
+		- Create Task Service
+		- Update Task Service
+		- Create-Update Task Component
+		- Delete Task Service
+		- Task Dependency Create Service
+		- Checklist
+			- Crud Services
+			- Checklist component (web)
+		- Worklog
+			- Crud Services
+			- Worklog Component (web)
+		- Task History Service (Last 25 event fast access)
+		- Task History Component
+		- Move Task to Anather Section Service
+		- Move Task to Another Exectuiton Group Service
+		- Share with Specific user with Permissions Service
+		- Archive Task Service
+	- Project - Section Based Custom Fields
+		- Select 
+			- Struct And Validations
+			- Component (web)
+		- Money Struct
+			- Struct And Validations
+			- Component (web)
+		- Text
+			- Struct And Validations
+			- Component (web)
+		- Text Area
+			- Struct And Validations
+			- Component (web)
+		- Number
+			- Struct And Validations
+			- Component (web)
+		- Multiselect
+			- Struct And Validations
+			- Component (web)
+		- Calculation
+			- Struct And Validations
+			- Component (web)
+		- Member
+			- Struct And Validations
+			- Component (web)
+		- AutoProgressBar
+			- Struct And Validations
+			- Component (web)
+		- ManualProgressBar
+			- Struct And Validations
+			- Component (web)
+		- Date
+			- Struct And Validations
+			- Component (web)
+		- UrlLink
+			- Struct And Validations
+			- Component (web)
+		- CheckBox
+			- Struct And Validations
+			- Component (web)
+		- MailLink
+			- Struct And Validations
+			- Component (web)
+		-  Files
+			- Struct And Validations
+			- Component (web)
+		- Phones
+			- Struct And Validations
+			- Component (web)
+		- Locations
+			- Struct And Validations
+			- Component (web)
+		- Implementations 
+			- Github
+				- Github implementation structure
+				- Github implementation component
+	- Execution Plan 
+		- Create Exectution Plan Service
+		- Update Execution Plan Service
+		- Create-Update Execution Plan Component
+		- Delete Execution Plan Service
+	- Execution Group 
+		- Create Execution Group Service
+		- Update Execution Group Service
+		- Create-Update Execution Group Component
+		- Delete Execution Group Service
+	- Views
+		- List View
+			- Create Service
+			- Field names and Column Order Service
+			- Get Service
+			- Filter Service
+			- List View Component (web)
+		- Roadmap View
+			- Create Service
+			- Field names and Field Order Service
+			- Get Service
+			- Filter Service
+			- Roadmap View Component (web)
+		- Kanban View
+			- Create Service
+			- Field names and Field Order Service
+			- Get Service
+			- Filter Service
+			- Kanban View Component (web)
+		- Search Query Builder
+			- Search Query Builder Service
+			- Service Query Builder Component (web)
+	- Attachment
+		- Add attachment service
+		- Get Attachment Service
+		- Remove Attachment Serivce
+		- Add attachment component (web)
+		- Get Attachment Component (web)
+	- Document
+		- Create Document Service
+		- Update Document Service
+		- Remove Document Service
+	- Permission System
+		Permisson Control Structure Creation
+	- Archive
+		- Cumulative Archive Nodes System Design
+		- Db data to Archive convertion Services
+		- Archive to Db data convertions Services
+	- Chat
+		- Workspace, Project, Section, Task, Exe Plan, Exe Group Based Creatable Channels
+		- ...
+	- Reports
+		- Charts and graphs
+			- Pie Chart
+			- Column Chart
+			- Line Chart
+			- Etc
+	- History
+		- Log to History
 		
-* Frontend Specific (web) 	
+	- 
+	
+				
+		
+		
+		
+			
+		
+* Frontend Tech Specific (web) 	
 	- Monolith Frontend Service 
 		- components
+			- Tables
+				- PagiantionTable
 			- Inputs
 				- TextInput
 				- TextAreaInput
@@ -119,13 +324,20 @@ workspace contains all elements.
 			- docker file creation
 
 
-* Backend Specific
+* Backend Tech Specific
+	- Filter Standart Builder System
+	- Permission Control System
+	- Archive Microservice
+		- Project Service Connection
+		- RabbitMq Archive queue
 	- User Microservice
 		- Request Validation Structure
 		- Database Connection
 		- docketfile creation
 	- Notification Microservice
 		- Kafka Implentation and Configration
+	- Logger Microservice
+		- RabbitMq queue log
 
 * Pipeline Specific
 
@@ -1053,3 +1265,4 @@ Example Issue History Collection:
 
 ### Archive Service 
 Archive service includes clone datas of project service. This service is not editable.
+
